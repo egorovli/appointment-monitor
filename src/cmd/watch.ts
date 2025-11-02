@@ -1,9 +1,12 @@
+import type { GetAvailableDaysOptions } from '../lib/types.ts'
+
 import { Command } from 'commander'
 import ora from 'ora'
+
 import { PlaywrightBrowserManager } from '../lib/browser-manager.ts'
 import { checkAvailableSlots } from '../lib/slot-checker.ts'
+import { sendTelegramNotification } from '../lib/telegram-notifier.ts'
 import { hasAvailableDays, getTotalAvailableDays } from '../lib/utils.ts'
-import type { GetAvailableDaysOptions } from '../lib/types.ts'
 
 export const watch = new Command('watch')
 	.description('Monitor slot availability (long-running process)')
@@ -92,9 +95,27 @@ watch.action(async function watchAction() {
 
 				if (hasAvailable) {
 					checkSpinner.succeed(`[${iteration}] Available slots found! (${totalAvailable} days)`)
-				} else {
-					checkSpinner.info(`[${iteration}] No available slots (${totalAvailable} days)`)
+
+					// Send Telegram notification
+					const notifySpinner = ora('Sending Telegram notification...').start()
+					try {
+						await sendTelegramNotification({
+							operationText,
+							totalAvailable
+						})
+						notifySpinner.succeed('Telegram notification sent')
+					} catch (error) {
+						notifySpinner.fail(
+							`Failed to send notification: ${error instanceof Error ? error.message : String(error)}`
+						)
+					}
+
+					// Stop watch mode and exit
+					await shutdown('slots-found')
+					break
 				}
+
+				checkSpinner.info(`[${iteration}] No available slots (${totalAvailable} days)`)
 
 				// Reset page for next iteration
 				await browserManager.resetPage()

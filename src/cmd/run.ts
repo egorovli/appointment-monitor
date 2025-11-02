@@ -68,4 +68,3 @@ run.action(async function runAction() {
 		process.exit(1)
 	}
 })
-
