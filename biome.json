@@ -176,11 +176,7 @@
 			}
 		},
 		{
-			"includes": [
-				"tests/**/*.{ts,tsx}",
-				"**/*.spec.{ts,tsx}",
-				"**/*.test.{ts,tsx}"
-			],
+			"includes": ["tests/**/*.{ts,tsx}", "**/*.spec.{ts,tsx}", "**/*.test.{ts,tsx}"],
 			"javascript": {
 				"globals": [
 					"test",
