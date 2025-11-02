@@ -9,8 +9,10 @@
 		"lint:fix": "biome check . --write"
 	},
 	"dependencies": {
+		"@inversifyjs/strongly-typed": "^2.2.0",
 		"commander": "^14.0.2",
 		"grammy": "^1.38.3",
+		"inversify": "^7.10.4",
 		"ora": "^9.0.0",
 		"playwright": "^1.56.1"
 	},

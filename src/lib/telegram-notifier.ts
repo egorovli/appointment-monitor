@@ -1,4 +1,4 @@
-import { Api } from 'grammy'
+import { Api, InputFile } from 'grammy'
 
 export interface TelegramConfig {
 	botToken: string
@@ -59,4 +59,22 @@ export async function sendTelegramNotification(message: NotificationMessage): Pr
 	const formattedMessage = formatNotificationMessage(message)
 
 	await api.sendMessage(config.chatId, formattedMessage)
+}
+
+/**
+ * Sends an error screenshot with description via Telegram
+ */
+export async function sendErrorScreenshot(
+	screenshotBuffer: Buffer,
+	description: string
+): Promise<void> {
+	const config = validateTelegramConfig()
+	const api = new Api(config.botToken)
+
+	// Create an InputFile from the buffer
+	const inputFile = new InputFile(screenshotBuffer, 'error-screenshot.png')
+
+	await api.sendPhoto(config.chatId, inputFile, {
+		caption: description
+	})
 }
