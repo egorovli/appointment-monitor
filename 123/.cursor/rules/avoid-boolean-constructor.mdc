@@ -1,0 +1,9 @@
+---
+title: Avoid Boolean constructor casts
+---
+
+# Avoid `Boolean(...)` casts
+
+- Do not use `Boolean(value)` or `!!value` to coerce to boolean.
+- Prefer explicit predicates, e.g. `typeof value === 'string' && value.trim().length > 0`.
+- When checking optional numbers, compare directly (`value > 0`) instead of casting.
