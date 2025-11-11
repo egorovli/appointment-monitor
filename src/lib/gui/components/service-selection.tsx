@@ -1,6 +1,8 @@
 import { Box, Text, useFocus, useInput } from 'ink'
 import { useState } from 'react'
 
+import { useReload } from '../lib/use-reload.tsx'
+
 export interface ServiceSelectionProps {
 	onSelect: () => void
 }
@@ -8,6 +10,7 @@ export interface ServiceSelectionProps {
 export function ServiceSelection({ onSelect }: ServiceSelectionProps) {
 	const { isFocused } = useFocus({ autoFocus: true })
 	const [selected, setSelected] = useState(false)
+	useReload()
 
 	useInput((input, key) => {
 		if (!isFocused) {

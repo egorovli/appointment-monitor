@@ -1,10 +1,11 @@
 import { Box, Text, useFocus, useInput } from 'ink'
 import { useState } from 'react'
 
-import type { Operation } from '../../../poznan.uw.gov.pl/index.ts'
+import type { Operation } from '../../poznan.uw.gov.pl/index.ts'
 import { ErrorDisplay } from './error-display.tsx'
 import { LoadingSpinner } from './loading-spinner.tsx'
 import { useOperations } from '../lib/query/hooks.ts'
+import { useReload } from '../lib/use-reload.tsx'
 
 export interface OperationSelectionProps {
 	onSelect: (operation: Operation) => void
@@ -13,6 +14,7 @@ export interface OperationSelectionProps {
 export function OperationSelection({ onSelect }: OperationSelectionProps) {
 	const { data: operations, isLoading, isError, error } = useOperations()
 	const [selectedIndex, setSelectedIndex] = useState(0)
+	useReload()
 
 	const handleSelect = () => {
 		if (operations && operations.length > 0 && operations[selectedIndex]) {

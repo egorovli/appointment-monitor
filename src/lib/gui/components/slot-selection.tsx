@@ -5,6 +5,7 @@ import type { AppointmentSlot } from '../../../poznan.uw.gov.pl/index.ts'
 import { ErrorDisplay } from './error-display.tsx'
 import { LoadingSpinner } from './loading-spinner.tsx'
 import { useAppointmentSlots } from '../lib/query/hooks.ts'
+import { useReload } from '../lib/use-reload.tsx'
 
 export interface SlotSelectionProps {
 	operationId: string
@@ -27,6 +28,7 @@ export function SlotSelection({ operationId, date, onSelect, onBack }: SlotSelec
 	})
 	const [selectedIndex, setSelectedIndex] = useState(0)
 	const availableSlots = slots?.filter(slot => slot.available) ?? []
+	useReload()
 
 	const handleSelect = () => {
 		if (availableSlots.length > 0 && availableSlots[selectedIndex]) {

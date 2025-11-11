@@ -1,6 +1,7 @@
 import { Box, Text, useInput } from 'ink'
 
 import type { AppointmentSlot, Operation } from '../../../poznan.uw.gov.pl/index.ts'
+import { useReload } from '../lib/use-reload.tsx'
 
 export interface AppointmentSummaryProps {
 	operation: Operation
@@ -17,6 +18,7 @@ export function AppointmentSummary({
 	onConfirm,
 	onCancel
 }: AppointmentSummaryProps) {
+	useReload()
 	useInput((input, key) => {
 		if (input === 'y' || (key.return && input === '')) {
 			onConfirm()

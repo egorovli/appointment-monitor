@@ -5,6 +5,7 @@ import type { AppointmentDate } from '../../../poznan.uw.gov.pl/index.ts'
 import { ErrorDisplay } from './error-display.tsx'
 import { LoadingSpinner } from './loading-spinner.tsx'
 import { useAppointmentDates } from '../lib/query/hooks.ts'
+import { useReload } from '../lib/use-reload.tsx'
 
 export interface DateSelectionProps {
 	operationId: string
@@ -25,6 +26,7 @@ export function DateSelection({ operationId, onSelect, onBack }: DateSelectionPr
 	})
 	const [selectedIndex, setSelectedIndex] = useState(0)
 	const availableDates = dates?.filter(date => date.available) ?? []
+	useReload()
 
 	const handleSelect = () => {
 		if (availableDates.length > 0 && availableDates[selectedIndex]) {

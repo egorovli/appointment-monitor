@@ -1,15 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
 
+import { useClient } from '../client-context.tsx'
 import {
 	getAvailableAppointmentDates,
-	getAvailableAppointmentSlots,
-	loadOperations
+	getAvailableAppointmentSlots
 } from '../../../poznan.uw.gov.pl/index.ts'
 
 export function useOperations() {
+	const client = useClient()
 	return useQuery({
 		queryKey: ['operations'],
-		queryFn: loadOperations,
+		queryFn: () => client.loadOperations(),
 		staleTime: 1000 * 60 * 5 // 5 minutes
 	})
 }
