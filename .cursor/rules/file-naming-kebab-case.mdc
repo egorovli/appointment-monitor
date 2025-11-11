@@ -1,7 +1,8 @@
 ---
+description: When creating or renaming project files
+alwaysApply: false
 title: File naming must use kebab-case
 ---
-
 # File Naming: Use kebab-case
 
 All files in the project must use **kebab-case** naming convention.

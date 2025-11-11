@@ -1,3 +1,9 @@
+---
+description: Whenever adding or modifying import statements in a file
+alwaysApply: false
+title: Import ordering rules
+---
+
 # Import Ordering Rules
 
 All imports must follow eslint-plugin-import order rules. Group imports in this order, separated by blank lines:

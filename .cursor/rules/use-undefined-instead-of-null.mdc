@@ -1,4 +1,6 @@
 ---
+description: When modeling optional values or handling missing data in APIs
+alwaysApply: false
 title: Prefer undefined over null
 ---
 

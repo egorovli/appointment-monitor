@@ -1,0 +1,11 @@
+---
+description: Before running any other commands at the beginning of a session
+alwaysApply: false
+title: Agent startup protocols
+---
+
+# Agent Startup Protocols
+
+- Always activate Serena MCP at the very beginning of every interaction/session; do not run commands before confirming activation.
+- Log or otherwise note that Serena is active so subsequent steps can assume MCP context is ready.
+- Skip manual formatting during iterative edits to save tokens and time; run `bun run lint:fix` before handing work off if formatting might be off.
