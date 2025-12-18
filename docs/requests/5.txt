@@ -1,0 +1,10 @@
+Session storage after reservation:
+
+NV_RESERVATION_DATA_CONTEXT
+{"dzienWizyty":"2026-01-15","czas":"2025-12-18T18:12:04.246Z","adres":{"adres11":"Kozaračka 79","adres12":"81 000 Podgorica"},"tylko_dzieci":false}
+
+NV_TICKETS
+{"ticketsList":[{"bilet":"DAAAAAytNGHsH/5N9QvMoxAAAAA7odWt9ZpjtJ2suejck8LmUibZj7zXn8jlutBdl+TL9YamEJzpdByXBY2mzQ22GoCgd56YuQTtPqOeBV7Zyc+UUB0e6/aeu2VrWWUYNvs538vNh1mV6hJ04WZ1P8l5iAFVvxazuVjxay3T0SmzC3a/nBx+ZL44ZIRydO3al8CTVb3IJPi6iW8P+jOraw9Nf+gwJW/vDCNm9Kw+U3PMT1kH5WeW4tqIwcP2Ha/LOqD9PQ4AO62G+Req7DgnRwI0wzEBfd4kq6mdS/V+wwFYu40mv8ApNVIwuCNZYGUO1Bxbq82QlCC409oVYZINJLciKXYea7sDaezEC53EMTJRkBGiTjYAxFkDil8oGy0mAd793kE7PxBA98EV6pIgds+6r6sIEt9mirLDN5m4vszaSgtYiBr2NB/1FD9ChS3zqsJ/8F2GaLvsnQQ25tf9LpCky1vpRrmdqWWEDF1H6WShf8iTjtpvaPRupMgt0qohZ06YKaaEFf3YQ/4dgExfMzFVywTz20ljkjOAgYHESWyMYTjr1tqsZuug1rk5kXQXZP8i5QJyyER1pXhyqAUZ5fch/w==","data":"2026-01-15","godzina":"","wniosekDziecka":false}],"visitorIndex":0}
+
+INSTITUTION_CONTEXT_DATA
+{"nazwaPlacowki":"Podgorica","nazwaKraju":"CZARNOGÓRA","dostepneUslugi":{"wizaKrajowa":true,"wizaKrajowa_WYPELNIJ":false,"wizaSchengen":true,"wizaSchengen_WYPELNIJ":false,"mrgBialorus":false,"mrgBialorus_WYPELNIJ":false,"mrgUkraina":false,"mrgUkraina_WYPELNIJ":false,"mrgRosja":false,"mrgRosja_WYPELNIJ":false,"paszportowe":true,"prawne":true,"obywatelskie":false,"kartaPolaka":false},"adresPlacowki":{"adres11":"Kozaračka 79","adres12":"81 000 Podgorica","adres21":"","adres22":""},"emaile":{"spotkanieZKonsulem":"","sprawyPaszportowe":"","sprawyPrawne":"","sprawyObywatelskie":"","kartaPolaka":""}}

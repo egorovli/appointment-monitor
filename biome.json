@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.3.5/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.3.10/schema.json",
 	"vcs": {
 		"enabled": false,
 		"clientKind": "git",
@@ -7,24 +7,10 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-
 		"includes": [
-			"**",
-			"!.claude/**/*",
-			"!.cursor/**/*",
-			"!.old/**/*",
-			"!.old2/**/*",
-			"!.old.src/**/*",
-			"!.playwright-mcp/**/*",
-			"!.vscode/**/*",
-			"!.zed/**/*",
-			"!designs/**/*",
-			"!docs/**/*",
-			"!packages/web/.react-router/**/*",
-			"!packages/web/build/**/*",
-			"!packages/web/app/.old/**/*",
-			"!packages/api/.old.src/**/*",
-			"!packages/api/.old.src.2/**/*"
+			"packages/cli/src/**/*",
+			"packages/cli/package.json",
+			"packages/cli/tsconfig.json"
 		]
 	},
 	"formatter": {
@@ -175,40 +161,7 @@
 	},
 	"overrides": [
 		{
-			"includes": ["packages/web/app/**/*"],
-			"javascript": {
-				"globals": ["React", "Temporal"]
-			}
-		},
-		{
-			"includes": [
-				"packages/web/**/*.test.{ts,tsx}",
-				"packages/web/.jest/setup.ts",
-				"packages/web/jest.config.ts"
-			],
-			"javascript": {
-				"globals": [
-					"test",
-					"expect",
-					"describe",
-					"it",
-					"beforeEach",
-					"afterEach",
-					"beforeAll",
-					"afterAll",
-					"jest"
-				]
-			},
-			"linter": {
-				"rules": {
-					"style": {
-						"noDefaultExport": "off"
-					}
-				}
-			}
-		},
-		{
-			"includes": ["src/**/*", "lib/**/*"],
+			"includes": ["./packages/cli/src/**/*"],
 			"javascript": {
 				"globals": ["Bun", "Temporal"]
 			},
@@ -220,28 +173,6 @@
 					},
 					"complexity": {
 						"noExcessiveCognitiveComplexity": "off"
-					}
-				}
-			}
-		},
-		{
-			"includes": [
-				"packages/web/postcss.config.mjs",
-				"packages/web/react-router.config.ts",
-				"packages/web/jest.config.ts",
-				"packages/web/vite.config.ts",
-				"packages/web/vite.storybook.config.ts",
-				"packages/web/app/root.tsx",
-				"packages/web/app/routes.ts",
-				"packages/web/app/routes/**/*.tsx",
-				"packages/web/.storybook/**/*.{ts,tsx}",
-				"packages/web/stories/**/*.{ts,tsx}",
-				"packages/mobile/src/app/**/*.{ts,tsx}"
-			],
-			"linter": {
-				"rules": {
-					"style": {
-						"noDefaultExport": "off"
 					}
 				}
 			}

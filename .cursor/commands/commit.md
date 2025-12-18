@@ -1,6 +1,19 @@
-Using rules, defined in .cursor/rules and AGENTS.md, create a commit message for the current changes (staged, if available, otherwise the working tree). With this commit message, proceed with the commit command.
+1) Determine active changes: use staged files if any, otherwise all changed files.
 
-Create a commit message for the current changes. If there are staged changes, use them to create the commit message. Otherwise, use the working tree.
+2) Analyze changes to understand their purpose.
 
-* Use rules defined in .cursor/rules and AGENTS.md.
-* Use github MCP to fetch issues my relevant issues and tag them in the commit message, if applicable.
+3) Search open GitHub issues for relevance. A changeset may relate to multiple issues.
+
+4) If no relevant issue exists, create one: brief title/description, assign to current user, use latest milestone if available, add appropriate labels.
+
+5) Write commit message:
+   - Conventional commits format
+   - Concise, convey only what matters
+   - Very slightly passive-aggressive tone, barely noticeable
+   - Reference all relevant issues, e.g. "References #123, #234"
+
+6) Execute `git commit` with the prepared message.
+
+---
+
+Use GitHub MCP to interact with APIs. Use other necessary MCPs, primarily: context7 MCP, ddg search MCP, perplexity MCP.

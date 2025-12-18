@@ -1,0 +1,86 @@
+appointment-monitor/packages/cli on  main [!⇡] via  v24.11.1
+❯ bun start
+$ bun run ./src/index.ts
+[RESERVATION REQUEST]
+URL: https://api.e-konsulat.gov.pl/api/rezerwacja-wizyt-wizowych/rezerwacje
+Method: POST
+Headers: {
+  "Content-Type": "application/json",
+  "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:133.0) Gecko/20100101 Firefox/133.0",
+  "Accept": "application/json, text/plain, */*",
+  "Accept-Language": "en-US,en;q=0.7,ru;q=0.3",
+  "DNT": "1",
+  "Origin": "https://secure.e-konsulat.gov.pl",
+  "Referer": "https://secure.e-konsulat.gov.pl"
+}
+Body: {
+  "data": "2026-01-13",
+  "id_lokalizacji": 438,
+  "id_wersji_jezykowej": 1,
+  "token": "eeb42823-38d2-4a6a-be7b-9f511befc641",
+  "liczba_osob": 1,
+  "tylko_dzieci": false
+}
+Input: {
+  "date": "2026-01-13",
+  "locationId": "438",
+  "token": "eeb42823-38d2-4a6a-be7b-9f511befc641",
+  "amount": 1
+}
+[RESERVATION RESPONSE]
+Status: 200 OK
+Headers: {
+  "access-control-allow-origin": "*",
+  "connection": "keep-alive",
+  "content-length": "1389",
+  "content-type": "application/json; charset=utf-8",
+  "date": "Thu, 18 Dec 2025 18:11:01 GMT",
+  "strict-transport-security": "max-age=31536000",
+  "set-cookie": "AGAffinityCookieForSecure=81237297ac3b904c33aba11156b1cd82; Path=/"
+}
+URL: https://api.e-konsulat.gov.pl/api/rezerwacja-wizyt-wizowych/rezerwacje
+Response Body (raw): {"bilet":"DAAAAH9cp0gmtJVjfVuDlRAAAABqPfKFegiAG3OXI6b8ElZRImkwuNxHq3OKgtFowAq+olmUvXNGnxB8214niRMmBJ84pnaFTbGyIX3ZtdwitQG8Sk/Wk+Ja9xlp6aomJYNUvoaesyERoRKoSo1eVguQ7TUvufoxjmjU+mD+5ZBWOQJPOsEmfFl6Hd0Mb2BW4YVVHQGwECHNnjajzL9G46syRxaxxb1qe3/PKTQBq+/4JfTjGR7V4wi+Kgn2C+HSA1B2aLvah8LZUlGyuY2eJbPoR2A4yMswFmm/nNlKd5TuEZL4d47VKA3jvhYwGTY0aXokFT0aGx4eAoeBjRhu5sBi0WBZA7wbGmhiG5niSy+RmI7DJ5xjnCICVCr/qWkYqndfT9UqZMrHbGJ+lHzQR4lNq6N8zgPUUh8lOUFpLpwLBnzg8Vk2lNSCKQMatzHOKRje3/7tMpirNW7sRzrxtxNY7AXLVtpTf3wfQ0AX0YY4CBcUXYsYmlsIlyQHj61un0RrsBuZIlsJF5oBbZU2FNGeUK+MnCPPMPNjkp1HfUCQmCnY4M+2faP2VOXWdPatIc6z8vi5eOfPdvvoIFhONj/4ZA==","listaBiletow":[{"bilet":"DAAAAH9cp0gmtJVjfVuDlRAAAABqPfKFegiAG3OXI6b8ElZRImkwuNxHq3OKgtFowAq+olmUvXNGnxB8214niRMmBJ84pnaFTbGyIX3ZtdwitQG8Sk/Wk+Ja9xlp6aomJYNUvoaesyERoRKoSo1eVguQ7TUvufoxjmjU+mD+5ZBWOQJPOsEmfFl6Hd0Mb2BW4YVVHQGwECHNnjajzL9G46syRxaxxb1qe3/PKTQBq+/4JfTjGR7V4wi+Kgn2C+HSA1B2aLvah8LZUlGyuY2eJbPoR2A4yMswFmm/nNlKd5TuEZL4d47VKA3jvhYwGTY0aXokFT0aGx4eAoeBjRhu5sBi0WBZA7wbGmhiG5niSy+RmI7DJ5xjnCICVCr/qWkYqndfT9UqZMrHbGJ+lHzQR4lNq6N8zgPUUh8lOUFpLpwLBnzg8Vk2lNSCKQMatzHOKRje3/7tMpirNW7sRzrxtxNY7AXLVtpTf3wfQ0AX0YY4CBcUXYsYmlsIlyQHj61un0RrsBuZIlsJF5oBbZU2FNGeUK+MnCPPMPNjkp1HfUCQmCnY4M+2faP2VOXWdPatIc6z8vi5eOfPdvvoIFhONj/4ZA==","data":"2026-01-13","godzina":"","zweryfikowanaTozsamosc":null,"wniosekDziecka":false}],"zweryfikowanaTozsamosc":null,"wniosekDziecka":false}
+Response Body (parsed): {
+  "bilet": "DAAAAH9cp0gmtJVjfVuDlRAAAABqPfKFegiAG3OXI6b8ElZRImkwuNxHq3OKgtFowAq+olmUvXNGnxB8214niRMmBJ84pnaFTbGyIX3ZtdwitQG8Sk/Wk+Ja9xlp6aomJYNUvoaesyERoRKoSo1eVguQ7TUvufoxjmjU+mD+5ZBWOQJPOsEmfFl6Hd0Mb2BW4YVVHQGwECHNnjajzL9G46syRxaxxb1qe3/PKTQBq+/4JfTjGR7V4wi+Kgn2C+HSA1B2aLvah8LZUlGyuY2eJbPoR2A4yMswFmm/nNlKd5TuEZL4d47VKA3jvhYwGTY0aXokFT0aGx4eAoeBjRhu5sBi0WBZA7wbGmhiG5niSy+RmI7DJ5xjnCICVCr/qWkYqndfT9UqZMrHbGJ+lHzQR4lNq6N8zgPUUh8lOUFpLpwLBnzg8Vk2lNSCKQMatzHOKRje3/7tMpirNW7sRzrxtxNY7AXLVtpTf3wfQ0AX0YY4CBcUXYsYmlsIlyQHj61un0RrsBuZIlsJF5oBbZU2FNGeUK+MnCPPMPNjkp1HfUCQmCnY4M+2faP2VOXWdPatIc6z8vi5eOfPdvvoIFhONj/4ZA==",
+  "listaBiletow": [
+    {
+      "bilet": "DAAAAH9cp0gmtJVjfVuDlRAAAABqPfKFegiAG3OXI6b8ElZRImkwuNxHq3OKgtFowAq+olmUvXNGnxB8214niRMmBJ84pnaFTbGyIX3ZtdwitQG8Sk/Wk+Ja9xlp6aomJYNUvoaesyERoRKoSo1eVguQ7TUvufoxjmjU+mD+5ZBWOQJPOsEmfFl6Hd0Mb2BW4YVVHQGwECHNnjajzL9G46syRxaxxb1qe3/PKTQBq+/4JfTjGR7V4wi+Kgn2C+HSA1B2aLvah8LZUlGyuY2eJbPoR2A4yMswFmm/nNlKd5TuEZL4d47VKA3jvhYwGTY0aXokFT0aGx4eAoeBjRhu5sBi0WBZA7wbGmhiG5niSy+RmI7DJ5xjnCICVCr/qWkYqndfT9UqZMrHbGJ+lHzQR4lNq6N8zgPUUh8lOUFpLpwLBnzg8Vk2lNSCKQMatzHOKRje3/7tMpirNW7sRzrxtxNY7AXLVtpTf3wfQ0AX0YY4CBcUXYsYmlsIlyQHj61un0RrsBuZIlsJF5oBbZU2FNGeUK+MnCPPMPNjkp1HfUCQmCnY4M+2faP2VOXWdPatIc6z8vi5eOfPdvvoIFhONj/4ZA==",
+      "data": "2026-01-13",
+      "godzina": "",
+      "zweryfikowanaTozsamosc": null,
+      "wniosekDziecka": false
+    }
+  ],
+  "zweryfikowanaTozsamosc": null,
+  "wniosekDziecka": false
+}
+[RESERVATION RESULT] {
+  "ticket": "DAAAAH9cp0gmtJVjfVuDlRAAAABqPfKFegiAG3OXI6b8ElZRImkwuNxHq3OKgtFowAq+olmUvXNGnxB8214niRMmBJ84pnaFTbGyIX3ZtdwitQG8Sk/Wk+Ja9xlp6aomJYNUvoaesyERoRKoSo1eVguQ7TUvufoxjmjU+mD+5ZBWOQJPOsEmfFl6Hd0Mb2BW4YVVHQGwECHNnjajzL9G46syRxaxxb1qe3/PKTQBq+/4JfTjGR7V4wi+Kgn2C+HSA1B2aLvah8LZUlGyuY2eJbPoR2A4yMswFmm/nNlKd5TuEZL4d47VKA3jvhYwGTY0aXokFT0aGx4eAoeBjRhu5sBi0WBZA7wbGmhiG5niSy+RmI7DJ5xjnCICVCr/qWkYqndfT9UqZMrHbGJ+lHzQR4lNq6N8zgPUUh8lOUFpLpwLBnzg8Vk2lNSCKQMatzHOKRje3/7tMpirNW7sRzrxtxNY7AXLVtpTf3wfQ0AX0YY4CBcUXYsYmlsIlyQHj61un0RrsBuZIlsJF5oBbZU2FNGeUK+MnCPPMPNjkp1HfUCQmCnY4M+2faP2VOXWdPatIc6z8vi5eOfPdvvoIFhONj/4ZA==",
+  "tickets": [
+    {
+      "ticket": "DAAAAH9cp0gmtJVjfVuDlRAAAABqPfKFegiAG3OXI6b8ElZRImkwuNxHq3OKgtFowAq+olmUvXNGnxB8214niRMmBJ84pnaFTbGyIX3ZtdwitQG8Sk/Wk+Ja9xlp6aomJYNUvoaesyERoRKoSo1eVguQ7TUvufoxjmjU+mD+5ZBWOQJPOsEmfFl6Hd0Mb2BW4YVVHQGwECHNnjajzL9G46syRxaxxb1qe3/PKTQBq+/4JfTjGR7V4wi+Kgn2C+HSA1B2aLvah8LZUlGyuY2eJbPoR2A4yMswFmm/nNlKd5TuEZL4d47VKA3jvhYwGTY0aXokFT0aGx4eAoeBjRhu5sBi0WBZA7wbGmhiG5niSy+RmI7DJ5xjnCICVCr/qWkYqndfT9UqZMrHbGJ+lHzQR4lNq6N8zgPUUh8lOUFpLpwLBnzg8Vk2lNSCKQMatzHOKRje3/7tMpirNW7sRzrxtxNY7AXLVtpTf3wfQ0AX0YY4CBcUXYsYmlsIlyQHj61un0RrsBuZIlsJF5oBbZU2FNGeUK+MnCPPMPNjkp1HfUCQmCnY4M+2faP2VOXWdPatIc6z8vi5eOfPdvvoIFhONj/4ZA==",
+      "date": "2026-01-13",
+      "time": "",
+      "isChildApplication": false
+    }
+  ],
+  "isChildApplication": false
+}
+[RESERVATION REQUEST END]
+Appointment Slot Checker
+
+Reservation created successfully!
+
+
+Ticket: DAAAAH9cp0gmtJVjfVuDlRAAAABqPfKFegiAG3OXI6b8ElZRImkwuNxHq3OKgtFowAq+olmUvXNGnxB8214niRMmBJ84pnaFTbGyIX3ZtdwitQG8Sk/Wk+Ja9xlp6aomJYNUvoaesyERoRKoSo1eVguQ7TUvufoxjmjU+mD+5ZBWOQJPOsEm
+fFl6Hd0Mb2BW4YVVHQGwECHNnjajzL9G46syRxaxxb1qe3/PKTQBq+/4JfTjGR7V4wi+Kgn2C+HSA1B2aLvah8LZUlGyuY2eJbPoR2A4yMswFmm/nNlKd5TuEZL4d47VKA3jvhYwGTY0aXokFT0aGx4eAoeBjRhu5sBi0WBZA7wbGmhiG5niSy+RmI7D
+J5xjnCICVCr/qWkYqndfT9UqZMrHbGJ+lHzQR4lNq6N8zgPUUh8lOUFpLpwLBnzg8Vk2lNSCKQMatzHOKRje3/7tMpirNW7sRzrxtxNY7AXLVtpTf3wfQ0AX0YY4CBcUXYsYmlsIlyQHj61un0RrsBuZIlsJF5oBbZU2FNGeUK+MnCPPMPNjkp1HfUCQ
+mCnY4M+2faP2VOXWdPatIc6z8vi5eOfPdvvoIFhONj/4ZA==
+
+Tickets (1):
+             1. Date: 2026-01-13, Time: N/A, Ticket: DAAAAH9cp0gmtJVjfVuDlRAAAABqPfKFegiAG3OXI6b8ElZRImkwuNxHq3OKgtFowAq+olmUvXNGnxB8214niRMmBJ84pnaFTbGyIX3ZtdwitQG8Sk/Wk+Ja9xlp6aomJYNUvo
+             aesyERoRKoSo1eVguQ7TUvufoxjmjU+mD+5ZBWOQJPOsEmfFl6Hd0Mb2BW4YVVHQGwECHNnjajzL9G46syRxaxxb1qe3/PKTQBq+/4JfTjGR7V4wi+Kgn2C+HSA1B2aLvah8LZUlGyuY2eJbPoR2A4yMswFmm/nNlKd5TuEZL4d47V
+             KA3jvhYwGTY0aXokFT0aGx4eAoeBjRhu5sBi0WBZA7wbGmhiG5niSy+RmI7DJ5xjnCICVCr/qWkYqndfT9UqZMrHbGJ+lHzQR4lNq6N8zgPUUh8lOUFpLpwLBnzg8Vk2lNSCKQMatzHOKRje3/7tMpirNW7sRzrxtxNY7AXLVtpTf3
+             wfQ0AX0YY4CBcUXYsYmlsIlyQHj61un0RrsBuZIlsJF5oBbZU2FNGeUK+MnCPPMPNjkp1HfUCQmCnY4M+2faP2VOXWdPatIc6z8vi5eOfPdvvoIFhONj/4ZA==
+
+Is Child Application: No
