@@ -10,7 +10,7 @@
 	"dependencies": {
 		"@inkjs/ui": "^2.0.0",
 		"@tanstack/react-query": "^5.90.12",
-		"@tensorflow/tfjs-node": "4.20.0",
+		"@tensorflow/tfjs-node": "4.22.0",
 		"commander": "^14.0.2",
 		"date-fns": "^4.1.0",
 		"grammy": "^1.38.4",
