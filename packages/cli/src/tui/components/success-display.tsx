@@ -37,7 +37,7 @@ function buildFormUrl(checkSlotsResult: CheckSlotsResult): string {
 /**
  * Generate console script for session storage injection
  */
-function generateConsoleScript(sessionData: SessionStorageData): string {
+function generateConsoleScript(sessionData: SessionStorageData, formUrl: string): string {
 	const nvReservation = JSON.stringify(sessionData.NV_RESERVATION_DATA_CONTEXT)
 	const nvTickets = JSON.stringify(sessionData.NV_TICKETS)
 
@@ -52,7 +52,7 @@ sessionStorage.setItem('INSTITUTION_CONTEXT_DATA', '${institution.replace(/'/g, 
 	}
 
 	script += `
-location.reload();`
+location.href = '${formUrl.replace(/'/g, "\\'")}';`
 
 	return script
 }
@@ -74,7 +74,7 @@ export function SuccessDisplay({
 	})
 
 	const formUrl = buildFormUrl(checkSlotsResult)
-	const consoleScript = generateConsoleScript(sessionData)
+	const consoleScript = generateConsoleScript(sessionData, formUrl)
 
 	// Get first ticket info
 	const firstTicket = result.tickets[0]
