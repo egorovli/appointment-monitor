@@ -9,13 +9,13 @@ import type {
 	CreateReservationResult
 } from '../../lib/e-konsulat.gov.pl/index.ts'
 
-import type { SessionStorageData } from '../../lib/browser/session-injection.ts'
-
 import { Box, Text } from 'ink'
 import { useEffect, useRef, useState } from 'react'
 
 import {
 	buildSessionStorageData,
+	buildFormUrl,
+	generateConsoleScript,
 	saveReservationData
 } from '../../lib/browser/session-injection.ts'
 
@@ -23,38 +23,6 @@ export interface SuccessDisplayProps {
 	result: CreateReservationResult
 	checkSlotsResult: CheckSlotsResult
 	consulateDetails: ConsulateDetails
-}
-
-/**
- * Build the form URL from checkSlots result
- */
-function buildFormUrl(checkSlotsResult: CheckSlotsResult): string {
-	const { consulateId, serviceType } = checkSlotsResult
-	const servicePath = serviceType === 1 ? 'wiza-krajowa' : 'wiza-schengen'
-	return `https://secure.e-konsulat.gov.pl/placowki/${consulateId}/${servicePath}/formularz/nowy`
-}
-
-/**
- * Generate console script for session storage injection
- */
-function generateConsoleScript(sessionData: SessionStorageData, formUrl: string): string {
-	const nvReservation = JSON.stringify(sessionData.NV_RESERVATION_DATA_CONTEXT)
-	const nvTickets = JSON.stringify(sessionData.NV_TICKETS)
-
-	let script = `// Paste this in browser console on the form page
-sessionStorage.setItem('NV_RESERVATION_DATA_CONTEXT', '${nvReservation.replace(/'/g, "\\'")}');
-sessionStorage.setItem('NV_TICKETS', '${nvTickets.replace(/'/g, "\\'")}');`
-
-	if (sessionData.INSTITUTION_CONTEXT_DATA) {
-		const institution = JSON.stringify(sessionData.INSTITUTION_CONTEXT_DATA)
-		script += `
-sessionStorage.setItem('INSTITUTION_CONTEXT_DATA', '${institution.replace(/'/g, "\\'")}');`
-	}
-
-	script += `
-location.href = '${formUrl.replace(/'/g, "\\'")}';`
-
-	return script
 }
 
 export function SuccessDisplay({

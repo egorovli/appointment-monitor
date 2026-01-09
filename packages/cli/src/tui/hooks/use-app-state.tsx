@@ -119,6 +119,10 @@ const initialState: AppState = {
 	stats: initialStatsState
 }
 
+function countAvailableSlots(slots: Slot[]): number {
+	return slots.filter(slot => Boolean(slot.date)).length
+}
+
 // Reducer function
 function appReducer(state: AppState, action: AppAction): AppState {
 	switch (action.type) {
@@ -146,7 +150,17 @@ function appReducer(state: AppState, action: AppAction): AppState {
 				}
 			}
 
-		case 'UPDATE_SEARCH':
+		case 'UPDATE_SEARCH': {
+			// Normalize reservation slot index when slot list or token changes
+			const slotCount = countAvailableSlots(action.slots)
+			const hasNewToken = state.search.currentToken !== action.token
+			const nextSlotIndex =
+				slotCount === 0
+					? 0
+					: hasNewToken
+						? 0
+						: Math.min(state.reservation.currentSlotIndex, slotCount - 1)
+
 			return {
 				...state,
 				search: {
@@ -155,8 +169,13 @@ function appReducer(state: AppState, action: AppAction): AppState {
 					currentToken: action.token,
 					checkSlotsResult: action.checkSlotsResult,
 					lastAttempt: new Date()
+				},
+				reservation: {
+					...state.reservation,
+					currentSlotIndex: nextSlotIndex
 				}
 			}
+		}
 
 		case 'INCREMENT_SEARCH_ATTEMPT':
 			return {
@@ -207,14 +226,18 @@ function appReducer(state: AppState, action: AppAction): AppState {
 				}
 			}
 
-		case 'TRY_NEXT_SLOT':
+		case 'TRY_NEXT_SLOT': {
+			const slotCount = countAvailableSlots(state.search.slots)
+			const nextIndex = slotCount > 0 ? (state.reservation.currentSlotIndex + 1) % slotCount : 0
+
 			return {
 				...state,
 				reservation: {
 					...state.reservation,
-					currentSlotIndex: state.reservation.currentSlotIndex + 1
+					currentSlotIndex: nextIndex
 				}
 			}
+		}
 
 		case 'LOG_RESERVATION_ERROR':
 			return {

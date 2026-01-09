@@ -3,11 +3,12 @@
  * Continuously checks for available slots until stopped
  */
 
-import type { Client as EKonsulatClient } from '../../lib/e-konsulat.gov.pl/index.ts'
+import type { EKonsulatClient } from '../../lib/e-konsulat.gov.pl/index.ts'
 
 import { useCallback, useEffect, useRef } from 'react'
 
 import { classifyError, createErrorLog, isHardRateLimit } from '../lib/error-classifier.ts'
+import type { AppPhase } from './use-app-state.tsx'
 import { useAppState } from './use-app-state.tsx'
 
 export interface UseSlotSearchOptions {
@@ -44,7 +45,7 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 	const abortRef = useRef<AbortController | null>(null)
 	const isRunningRef = useRef(false)
 	const captchaFailureCountRef = useRef(0) // Track consecutive CAPTCHA failures for backoff
-	const phaseRef = useRef(state.phase) // Track current phase to avoid stale closures
+	const phaseRef = useRef<AppPhase>(state.phase) // Track current phase to avoid stale closures
 
 	const stop = useCallback(() => {
 		isRunningRef.current = false
@@ -66,14 +67,14 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 		dispatch({ type: 'START_SEARCH' })
 
 		// CRITICAL: Use ref to check current phase, not closure
-		const checkShouldContinue = () => isRunningRef.current && phaseRef.current !== 'success'
+		const checkShouldContinue = () => isRunningRef.current
 
 		while (checkShouldContinue()) {
-			// Double-check phase before each iteration
-			if (phaseRef.current === 'success') {
-				stop()
-				break
-			}
+				// Double-check phase before each iteration
+				if (phaseRef.current === 'success') {
+					stop()
+					break
+				}
 			abortRef.current = new AbortController()
 
 			try {
@@ -100,10 +101,10 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 				})
 
 				// Check if we should stop (including success phase)
-				if (!isRunningRef.current || phaseRef.current === 'success') {
-					stop()
-					break
-				}
+					if (!isRunningRef.current || phaseRef.current === 'success') {
+						stop()
+						break
+					}
 
 				// Update state with results
 				const slots = result.slots.map(s => s.date || '').filter(Boolean)
@@ -185,16 +186,16 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 
 	// Start/stop search based on enabled prop
 	useEffect(() => {
-		// CRITICAL: Never start if already succeeded
-		if (phaseRef.current === 'success') {
-			stop()
-			return
-		}
+			// CRITICAL: Never start if already succeeded
+			if (phaseRef.current === 'success') {
+				stop()
+				return
+			}
 
-		if (enabled && !isRunningRef.current && phaseRef.current !== 'success') {
-			runSearch()
-		} else if (!enabled && isRunningRef.current) {
-			stop()
+			if (enabled && !isRunningRef.current) {
+				runSearch()
+			} else if (!enabled && isRunningRef.current) {
+				stop()
 		}
 
 		return () => {

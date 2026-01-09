@@ -60,7 +60,7 @@ run.action(async function run(options: RunOptions): Promise<void> {
 	await realClient.initialize()
 
 	// Create simulation client if dry-run is enabled
-	const eKonsulatClient = options.dryRun
+	const eKonsulatClient: eKonsulat.EKonsulatClient = options.dryRun
 		? new eKonsulat.SimulationClient(realClient, {
 				slotSearchSuccessRate: parsePercentage(options.simulationSlotSearchSuccessRate ?? '3.75%'),
 				slotReservationSuccessRate: parsePercentage(

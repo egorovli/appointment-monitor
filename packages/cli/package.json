@@ -5,7 +5,8 @@
 		"dev": "bun run --watch --no-clear-screen ./src/index.ts",
 		"start": "bun run ./src/index.ts",
 		"lint": "biome check .",
-		"lint:fix": "biome check . --write"
+		"lint:fix": "biome check . --write",
+		"types:check": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@inkjs/ui": "^2.0.0",

@@ -3,10 +3,7 @@
  * Attempts to book slots when they become available
  */
 
-import type {
-	Client as EKonsulatClient,
-	CreateReservationResult
-} from '../../lib/e-konsulat.gov.pl/index.ts'
+import type { EKonsulatClient, CreateReservationResult } from '../../lib/e-konsulat.gov.pl/index.ts'
 
 import { useCallback, useEffect, useRef } from 'react'
 
@@ -193,8 +190,7 @@ export function useReservation(options: UseReservationOptions): UseReservationRe
 		if (
 			enabled &&
 			state.search.slots.length > 0 &&
-			!isRunningRef.current &&
-			state.phase !== 'success'
+			!isRunningRef.current
 		) {
 			// Fetch consulate details first if not already done
 			if (

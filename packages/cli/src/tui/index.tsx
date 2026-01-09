@@ -4,7 +4,7 @@
  */
 
 import type { Solver as CaptchaSolver } from '../lib/captcha/index.ts'
-import type { Client as EKonsulatClient } from '../lib/e-konsulat.gov.pl/index.ts'
+import type { EKonsulatClient } from '../lib/e-konsulat.gov.pl/index.ts'
 import type * as React from 'react'
 import type { AppParams } from './hooks/use-app-state.tsx'
 
