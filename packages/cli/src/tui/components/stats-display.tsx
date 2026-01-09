@@ -9,9 +9,12 @@ import type {
 	SearchState,
 	StatsState
 } from '../hooks/use-app-state.tsx'
-import type { ErrorLog, ErrorType } from '../lib/error-classifier.ts'
 
-import { Badge, ProgressBar } from '@inkjs/ui'
+import type { ErrorLog, ErrorType } from '../lib/error-classifier.ts'
+import type { TextProps } from 'ink'
+import type { ComponentTheme } from '@inkjs/ui'
+
+import { Badge, defaultTheme, extendTheme, ProgressBar, ThemeProvider } from '@inkjs/ui'
 import { Box, Text } from 'ink'
 import { useEffect, useState } from 'react'
 
@@ -63,6 +66,23 @@ function formatMs(ms: number | undefined): string {
 	}
 	return `${(ms / 1000).toFixed(2)}s`
 }
+
+const progressBarTheme = {
+	styles: {
+		completed: (): TextProps => ({
+			color: 'cyan'
+		}),
+		remaining: (): TextProps => ({
+			dimColor: true
+		})
+	}
+} satisfies ComponentTheme
+
+const customTheme = extendTheme(defaultTheme, {
+	components: {
+		ProgressBar: progressBarTheme
+	}
+})
 
 export function StatsDisplay({
 	phase,
@@ -133,7 +153,9 @@ export function StatsDisplay({
 			: 0
 
 	const cooldownProgress =
-		activeCooldownDuration > 0 ? (activeCooldownLeft / activeCooldownDuration) * 100 : 0
+		activeCooldownDuration > 0
+			? Math.min((activeCooldownLeft / activeCooldownDuration) * 100, 100)
+			: 0
 
 	return (
 		<Box
@@ -190,7 +212,9 @@ export function StatsDisplay({
 								<Text color='grey'>N/A</Text>
 							)}
 						</Box>
-						<ProgressBar value={cooldownProgress} />
+						<ThemeProvider theme={customTheme}>
+							<ProgressBar value={cooldownProgress} />
+						</ThemeProvider>
 					</Box>
 				</Box>
 			</Box>
