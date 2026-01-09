@@ -1,0 +1,68 @@
+---
+alwaysApply: true
+---
+
+# Commit Message Guidelines
+
+Follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
+
+## Format
+
+`<type>[optional scope]: <description>`
+
+## Types
+
+- `feat`: New feature (MINOR version bump)
+- `fix`: Bug fix (PATCH version bump)
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, semicolons, etc.)
+- `refactor`: Code refactoring (no bug fix or feature)
+- `test`: Adding or updating tests
+- `chore`: Maintenance tasks (build, dependencies, etc.)
+- `ci`: CI/CD changes
+- `perf`: Performance improvements
+- `build`: Build system changes
+
+## Scope (Optional)
+
+Module/area affected, in parentheses: `feat(web):`, `fix(api):`, `chore(updates):`
+
+Common scopes: `web`, `api`, `updates`, `mobile`, `service`, `terraform`, `docs`
+
+## Description
+
+- Use **imperative mood** (e.g., "add claims table" not "added claims table")
+- Be **very concise and on-point** - Get to the point quickly, no fluff
+- Be **professional** - Maintain a professional tone
+- **Slightly passive-aggressive** - A subtle edge is acceptable, but keep it professional
+
+## Breaking Changes
+
+- Append `!` after type/scope: `feat(api)!: drop Node 16 support`
+- Or include `BREAKING CHANGE:` footer in the commit body
+
+## Jira Issue References
+
+- Use Atlassian MCP to find relevant Jira issues
+- Tag them in commit messages using footer format: `Related to LP-874`
+- **Multiple references are possible**: Use comma-separated format: `Related to LP-874, LP-875`
+- Example:
+  ```
+  feat(web): add claims table
+
+  Related to LP-874
+  ```
+
+## Examples
+
+- `feat(web): add claims table` (with footer: `Related to LP-874`)
+- `feat(web): add claims table` (with footer: `Related to LP-874, LP-875` - multiple references)
+- `fix(api): resolve authentication race condition`
+- `chore!: drop Node 16 support` (breaking change)
+- `docs: update API documentation`
+- `refactor(api): simplify error handling logic`
+- `test(updates): add integration tests for update flow`
+
+## Reference
+
+- [Conventional Commits Specification](https://www.conventionalcommits.org/en/v1.0.0/)

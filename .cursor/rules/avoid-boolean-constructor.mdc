@@ -1,7 +1,5 @@
 ---
-description: When implementing or refactoring boolean checks and coercions
-alwaysApply: false
-title: Avoid Boolean constructor casts
+alwaysApply: true
 ---
 
 # Avoid `Boolean(...)` casts

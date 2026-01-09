@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bun run lint:fix:*)",
+      "Bash(bun run types:check:*)",
+      "mcp__serena__activate_project"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "context7",
+    "playwright",
+    "sequential-thinking",
+    "serena",
+    "desktop-commander",
+    "ddg-search",
+    "github",
+    "perplexity"
+  ],
+  "enableAllProjectMcpServers": true
+}

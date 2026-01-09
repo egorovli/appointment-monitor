@@ -1,7 +1,5 @@
 ---
-description: Whenever adding or modifying import statements in a file
-alwaysApply: false
-title: Import ordering rules
+alwaysApply: true
 ---
 
 # Import Ordering Rules
@@ -10,8 +8,8 @@ All imports must follow eslint-plugin-import order rules. Group imports in this 
 
 1. **Type imports** (`import type { ... } from ...`) - ALL type-only imports first
 2. **Node/Bun built-ins** - Built-in modules (e.g., `fs`, `path`)
-3. **External modules** - Dependencies from `node_modules` (e.g., `playwright`)
-4. **Local imports** - Relative imports from the project (e.g., `../utils/...`)
+3. **External modules** - Dependencies from `node_modules` (e.g., `react-router`, `@tanstack/react-query`)
+4. **Local imports** - Relative imports from the project (e.g., `~/lib/...`)
 
 ## Rules:
 
@@ -24,11 +22,12 @@ All imports must follow eslint-plugin-import order rules. Group imports in this 
 ## Example:
 
 ```typescript
-import type { Browser, Page } from 'playwright'
+import type { JiraIssueSearchResult } from '~/lib/atlassian/issue.ts'
+import type { LoaderFunctionArgs } from 'react-router'
 
-import { chromium } from 'playwright'
+import { useQuery } from '@tanstack/react-query'
 
-import { checkAvailableSlots } from '../src/index.js'
+import { AtlassianClient } from '~/lib/atlassian/client.ts'
 ```
 
 ## Reference:

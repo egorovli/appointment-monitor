@@ -14,9 +14,6 @@
 	"[json]": {
 		"editor.defaultFormatter": "biomejs.biome"
 	},
-	"tailwindCSS.experimental.classRegex": [
-		["tva\\((([^()]*|\\([^()]*\\))*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]
-	],
 	"javascript.format.semicolons": "remove",
 	"javascript.preferences.importModuleSpecifier": "relative",
 	"javascript.preferences.importModuleSpecifierEnding": "js",

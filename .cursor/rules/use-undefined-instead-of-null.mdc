@@ -1,11 +1,9 @@
 ---
-description: When modeling optional values or handling missing data in APIs
-alwaysApply: false
-title: Prefer undefined over null
+alwaysApply: true
 ---
 
 # Prefer `undefined` over `null`
 
 - Do not introduce `null` in new code. Use `undefined` to represent missing or optional values.
 - When updating existing logic, replace `null` checks and returns with `undefined` unless interoperability requires otherwise.
-- Functions and interfaces should return `Foo | undefined` instead of `Foo | null`.
+- Repository interfaces and use cases should return `Foo | undefined` instead of `Foo | null`.

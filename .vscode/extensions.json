@@ -1,8 +1,0 @@
-{
-	"recommendations": [
-		"mikestead.dotenv",
-		"bradlc.vscode-tailwindcss",
-		"oven.bun-vscode",
-		"biomejs.biome"
-	]
-}
