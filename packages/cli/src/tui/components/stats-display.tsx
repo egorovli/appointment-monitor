@@ -57,7 +57,7 @@ function formatMs(ms: number | undefined): string {
 		return 'n/a'
 	}
 	if (ms < 1000) {
-		return `${ms}ms`
+		return `${Math.round(ms)}ms`
 	}
 	return `${(ms / 1000).toFixed(2)}s`
 }

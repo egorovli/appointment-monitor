@@ -1,7 +1,7 @@
+import type { Solver } from '../captcha/solver.ts'
+
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-
-import type { Solver } from '../captcha/solver.ts'
 
 interface CaptchaResponse {
 	id: string

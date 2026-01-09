@@ -25,6 +25,18 @@ export interface SuccessDisplayProps {
 	consulateDetails: ConsulateDetails
 }
 
+const Divider = ({ color, dimColor }: { color?: string; dimColor?: boolean }) => (
+	<Box
+		borderStyle='single'
+		borderTop={true}
+		borderBottom={false}
+		borderLeft={false}
+		borderRight={false}
+		borderColor={color}
+		dimColor={dimColor}
+	/>
+)
+
 export function SuccessDisplay({
 	result,
 	checkSlotsResult,
@@ -101,8 +113,7 @@ export function SuccessDisplay({
 				</Text>
 			</Box>
 
-			{/* Divider */}
-			<Text color='green'>{'─'.repeat(60)}</Text>
+			<Divider color='green' />
 
 			{/* Ticket Info */}
 			<Box flexDirection='column'>
@@ -130,8 +141,7 @@ export function SuccessDisplay({
 				</Text>
 			</Box>
 
-			{/* Divider */}
-			<Text color='green'>{'─'.repeat(60)}</Text>
+			<Divider color='green' />
 
 			{/* Step 1: URL */}
 			<Box flexDirection='column'>
@@ -148,7 +158,7 @@ export function SuccessDisplay({
 					<Text bold>2. Paste in browser console (F12) </Text>
 					{copied && <Text color='green'>- COPIED TO CLIPBOARD</Text>}
 				</Box>
-				<Text dimColor>{'─'.repeat(58)}</Text>
+				<Divider dimColor />
 				<Box
 					flexDirection='column'
 					paddingLeft={1}
@@ -166,7 +176,7 @@ export function SuccessDisplay({
 						))}
 					{consoleScript.split('\n').length > 6 && <Text dimColor>...</Text>}
 				</Box>
-				<Text dimColor>{'─'.repeat(58)}</Text>
+				<Divider dimColor />
 			</Box>
 
 			{/* Step 3 */}
@@ -174,8 +184,7 @@ export function SuccessDisplay({
 				<Text bold>3. Fill out the form after page reloads</Text>
 			</Box>
 
-			{/* Divider */}
-			<Text color='green'>{'─'.repeat(60)}</Text>
+			<Divider color='green' />
 
 			{/* Footer */}
 			{savedPath && <Text dimColor>Saved: {savedPath}</Text>}

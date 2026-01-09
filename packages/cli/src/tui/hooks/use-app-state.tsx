@@ -3,6 +3,8 @@
  * Simplified from Zustand for clearer state flow
  */
 
+import type { ReactNode } from 'react'
+
 import type {
 	CheckSlotsResult,
 	ConsulateDetails,
@@ -11,7 +13,6 @@ import type {
 } from '../../lib/e-konsulat.gov.pl/index.ts'
 
 import type { ErrorLog } from '../lib/error-classifier.ts'
-import type { ReactNode } from 'react'
 
 import { createContext, useContext, useReducer } from 'react'
 

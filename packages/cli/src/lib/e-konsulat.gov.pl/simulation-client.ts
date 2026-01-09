@@ -6,6 +6,7 @@
 import type {
 	CheckSlotsInput,
 	CheckSlotsResult,
+	Client,
 	ConsulateDetails,
 	Country,
 	CreateReservationInput,
@@ -21,10 +22,7 @@ import type {
 } from './client.ts'
 
 import { ApiError, SlotUnavailableError } from '../../tui/lib/error-classifier.ts'
-
 import { sampleCheckSlotsResults, sampleCreateReservationResults } from './simulation-data.ts'
-
-import type { Client } from './client.ts'
 
 export interface SimulationConfig {
 	slotSearchSuccessRate: number // 0-1

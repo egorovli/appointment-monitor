@@ -10,6 +10,7 @@ import type {
 	SearchState,
 	StatsState
 } from '../hooks/use-app-state.tsx'
+
 import type { ErrorLog, ErrorType } from '../lib/error-classifier.ts'
 
 import { Spinner } from '@inkjs/ui'
@@ -17,7 +18,6 @@ import { Box, Text } from 'ink'
 import { format, isValid, parseISO } from 'date-fns'
 
 import { getErrorTypeDescription, summarizeErrors } from '../lib/error-classifier.ts'
-
 import { ErrorWindow } from './error-window.tsx'
 import { LogWindow } from './log-window.tsx'
 import { StatsDisplay } from './stats-display.tsx'
@@ -53,6 +53,18 @@ function formatErrorBreakdown(errors: ErrorLog[]): string[] {
 		.map(([type, count]) => `${count} ${getErrorTypeDescription(type as ErrorType).toLowerCase()}`)
 }
 
+const Divider = ({ color, dimColor }: { color?: string; dimColor?: boolean }) => (
+	<Box
+		borderStyle='single'
+		borderTop={true}
+		borderBottom={false}
+		borderLeft={false}
+		borderRight={false}
+		borderColor={color}
+		dimColor={dimColor}
+	/>
+)
+
 export function SlotMonitor({
 	params,
 	search,
@@ -82,8 +94,6 @@ export function SlotMonitor({
 	const showErrors = allErrors.length > 0
 	const showLogs = logs.length > 0
 
-	const divider = '-'.repeat(60)
-
 	return (
 		<Box
 			flexDirection='column'
@@ -104,7 +114,7 @@ export function SlotMonitor({
 				reservation={reservation}
 			/>
 
-			<Text>{divider}</Text>
+			<Divider dimColor />
 
 			<Box
 				flexDirection='column'
@@ -156,7 +166,7 @@ export function SlotMonitor({
 
 			{hasReservationSection && (
 				<>
-					<Text>{divider}</Text>
+					<Divider dimColor />
 					<Box
 						flexDirection='column'
 						gap={1}
@@ -194,7 +204,7 @@ export function SlotMonitor({
 
 			{showErrors && (
 				<>
-					<Text>{divider}</Text>
+					<Divider dimColor />
 					<ErrorWindow
 						errors={allErrors}
 						maxLines={5}
@@ -205,7 +215,7 @@ export function SlotMonitor({
 
 			{showLogs && (
 				<>
-					<Text>{divider}</Text>
+					<Divider dimColor />
 					<LogWindow
 						logs={logs}
 						maxLines={10}

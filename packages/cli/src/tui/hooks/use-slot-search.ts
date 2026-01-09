@@ -4,12 +4,12 @@
  */
 
 import type { EKonsulatClient } from '../../lib/e-konsulat.gov.pl/index.ts'
+import type { AppPhase } from './use-app-state.tsx'
 
 import { useCallback, useEffect, useRef } from 'react'
 
 import { classifyError, createErrorLog, isHardRateLimit } from '../lib/error-classifier.ts'
 import { notifySlotsFound } from '../lib/notifications.ts'
-import type { AppPhase } from './use-app-state.tsx'
 import { useAppState } from './use-app-state.tsx'
 
 export interface UseSlotSearchOptions {
