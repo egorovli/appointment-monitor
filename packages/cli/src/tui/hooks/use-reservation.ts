@@ -3,13 +3,15 @@
  * Attempts to book slots when they become available
  */
 
-import { useCallback, useEffect, useRef } from 'react'
 import type {
 	Client as EKonsulatClient,
 	CreateReservationResult
 } from '../../lib/e-konsulat.gov.pl/index.ts'
-import { useAppState } from './use-app-state.tsx'
+
+import { useCallback, useEffect, useRef } from 'react'
+
 import { createErrorLog, isHardRateLimit, SlotUnavailableError } from '../lib/error-classifier.ts'
+import { useAppState } from './use-app-state.tsx'
 
 export interface UseReservationOptions {
 	client: EKonsulatClient
@@ -120,7 +122,9 @@ export function useReservation(options: UseReservationOptions): UseReservationRe
 	}, [state, client, dispatch, onSuccess, stop])
 
 	const runReservationLoop = useCallback(async () => {
-		if (isRunningRef.current) return
+		if (isRunningRef.current) {
+			return
+		}
 		isRunningRef.current = true
 
 		while (isRunningRef.current && state.phase !== 'success') {

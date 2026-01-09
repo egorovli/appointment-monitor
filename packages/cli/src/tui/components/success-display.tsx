@@ -3,17 +3,20 @@
  * Shows reservation result with session data for browser injection
  */
 
-import { useEffect, useState } from 'react'
-import { Box, Text } from 'ink'
 import type {
-	CreateReservationResult,
 	CheckSlotsResult,
-	ConsulateDetails
+	ConsulateDetails,
+	CreateReservationResult
 } from '../../lib/e-konsulat.gov.pl/index.ts'
+
+import type { SessionStorageData } from '../../lib/browser/session-injection.ts'
+
+import { Box, Text } from 'ink'
+import { useEffect, useState } from 'react'
+
 import {
 	buildSessionStorageData,
-	saveReservationData,
-	type SessionStorageData
+	saveReservationData
 } from '../../lib/browser/session-injection.ts'
 
 export interface SuccessDisplayProps {
@@ -180,7 +183,7 @@ export function SuccessDisplay({
 						.slice(0, 6)
 						.map((line, i) => (
 							<Text
-								key={i}
+								key={`line-${i}-${line.slice(0, 20)}`}
 								dimColor
 							>
 								{line}

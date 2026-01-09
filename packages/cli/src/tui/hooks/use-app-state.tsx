@@ -3,14 +3,17 @@
  * Simplified from Zustand for clearer state flow
  */
 
-import { createContext, useContext, useReducer, type ReactNode } from 'react'
 import type {
-	Slot,
 	CheckSlotsResult,
+	ConsulateDetails,
 	CreateReservationResult,
-	ConsulateDetails
+	Slot
 } from '../../lib/e-konsulat.gov.pl/index.ts'
+
 import type { ErrorLog } from '../lib/error-classifier.ts'
+import type { ReactNode } from 'react'
+
+import { createContext, useContext, useReducer } from 'react'
 
 // Application phases
 export type AppPhase = 'params' | 'searching' | 'booking' | 'success'

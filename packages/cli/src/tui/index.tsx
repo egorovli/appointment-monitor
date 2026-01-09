@@ -3,20 +3,22 @@
  * Simplified architecture with React Context + hooks
  */
 
-import type { Client as EKonsulatClient } from '../lib/e-konsulat.gov.pl/index.ts'
 import type { Solver as CaptchaSolver } from '../lib/captcha/index.ts'
+import type { Client as EKonsulatClient } from '../lib/e-konsulat.gov.pl/index.ts'
+import type * as React from 'react'
+import type { AppParams } from './hooks/use-app-state.tsx'
 
 import { QueryClientProvider } from '@tanstack/react-query'
 import * as ink from 'ink'
-import type * as React from 'react'
 
 import * as query from '../lib/query/index.ts'
-import { AppProvider, useAppState, type AppParams } from './hooks/use-app-state.tsx'
-import { useSlotSearch } from './hooks/use-slot-search.ts'
-import { useReservation } from './hooks/use-reservation.ts'
+
 import { ParamSelector } from './components/param-selector.tsx'
 import { SlotMonitor } from './components/slot-monitor.tsx'
 import { SuccessDisplay } from './components/success-display.tsx'
+import { AppProvider, useAppState } from './hooks/use-app-state.tsx'
+import { useReservation } from './hooks/use-reservation.ts'
+import { useSlotSearch } from './hooks/use-slot-search.ts'
 
 export interface AppProps {
 	eKonsulat: {

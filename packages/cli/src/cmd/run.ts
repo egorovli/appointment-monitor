@@ -2,9 +2,9 @@ import { Command } from 'commander'
 
 import * as path from 'node:path'
 
-import * as tui from '../tui/index.tsx'
-import * as eKonsulat from '../lib/e-konsulat.gov.pl/index.ts'
 import * as captcha from '../lib/captcha/index.ts'
+import * as eKonsulat from '../lib/e-konsulat.gov.pl/index.ts'
+import * as tui from '../tui/index.tsx'
 
 export const run = new Command('run')
 	.description('Run')

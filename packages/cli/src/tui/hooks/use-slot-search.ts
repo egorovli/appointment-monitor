@@ -3,10 +3,12 @@
  * Continuously checks for available slots until stopped
  */
 
-import { useCallback, useEffect, useRef } from 'react'
 import type { Client as EKonsulatClient } from '../../lib/e-konsulat.gov.pl/index.ts'
+
+import { useCallback, useEffect, useRef } from 'react'
+
+import { classifyError, createErrorLog, isHardRateLimit } from '../lib/error-classifier.ts'
 import { useAppState } from './use-app-state.tsx'
-import { createErrorLog, isHardRateLimit, classifyError } from '../lib/error-classifier.ts'
 
 export interface UseSlotSearchOptions {
 	client: EKonsulatClient
@@ -48,7 +50,9 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 	}, [])
 
 	const runSearch = useCallback(async () => {
-		if (isRunningRef.current) return
+		if (isRunningRef.current) {
+			return
+		}
 		isRunningRef.current = true
 
 		dispatch({ type: 'START_SEARCH' })
@@ -63,7 +67,9 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 				const captchaToken = await client.completeCaptcha()
 
 				// Check if we should stop
-				if (!isRunningRef.current) break
+				if (!isRunningRef.current) {
+					break
+				}
 
 				// Step 2: Check slots
 				const result = await client.checkSlots({
@@ -74,7 +80,9 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 				})
 
 				// Check if we should stop
-				if (!isRunningRef.current) break
+				if (!isRunningRef.current) {
+					break
+				}
 
 				// Update state with results
 				const slots = result.slots.map(s => s.date || '').filter(Boolean)
@@ -94,7 +102,9 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 				await sleep(BASE_DELAY + getRandomJitter())
 			} catch (error) {
 				// Check if we should stop
-				if (!isRunningRef.current) break
+				if (!isRunningRef.current) {
+					break
+				}
 
 				// Log the error
 				const errorLog = createErrorLog(error, { locationId, amount })

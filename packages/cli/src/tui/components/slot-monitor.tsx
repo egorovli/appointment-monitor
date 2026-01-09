@@ -3,14 +3,13 @@
  * Shows real-time search and booking progress
  */
 
-import { Box, Text } from 'ink'
+import type { AppParams, ReservationState, SearchState } from '../hooks/use-app-state.ts'
+import type { ErrorType } from '../lib/error-classifier.ts'
+
 import { Spinner } from '@inkjs/ui'
-import type { AppParams, SearchState, ReservationState } from '../hooks/use-app-state.ts'
-import {
-	summarizeErrors,
-	getErrorTypeDescription,
-	type ErrorType
-} from '../lib/error-classifier.ts'
+import { Box, Text } from 'ink'
+
+import { getErrorTypeDescription, summarizeErrors } from '../lib/error-classifier.ts'
 
 export interface SlotMonitorProps {
 	params: AppParams
@@ -27,7 +26,9 @@ function formatTime(date: Date | undefined): string {
 }
 
 function formatErrorSummary(errors: { type: ErrorType; count: number }[]): string {
-	if (errors.length === 0) return 'None'
+	if (errors.length === 0) {
+		return 'None'
+	}
 	return errors
 		.filter(e => e.count > 0)
 		.map(e => `${e.count} ${getErrorTypeDescription(e.type).toLowerCase()}`)
@@ -106,9 +107,9 @@ export function SlotMonitor({
 						>
 							Available dates:
 						</Text>
-						{slotDates.map((date, i) => (
+						{slotDates.map(date => (
 							<Text
-								key={i}
+								key={date}
 								color='green'
 							>
 								{' '}

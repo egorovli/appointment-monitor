@@ -1,11 +1,15 @@
 import type {
-	CreateReservationResult,
 	CheckSlotsResult,
-	ConsulateDetails
+	ConsulateDetails,
+	CreateReservationResult
 } from '../e-konsulat.gov.pl/index.ts'
-import { chromium, type Browser, type BrowserContext, type Page } from 'playwright'
-import { mkdir, writeFile, readFile } from 'node:fs/promises'
+
+import type { Browser, BrowserContext, Page } from 'playwright'
+
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+
+import { chromium } from 'playwright'
 
 export interface SessionStorageData {
 	NV_RESERVATION_DATA_CONTEXT: {

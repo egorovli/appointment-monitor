@@ -3,17 +3,19 @@
  * Sequential selection: Country → Consulate → Service → Location → Amount
  */
 
-import { useState } from 'react'
-import { Box, Text } from 'ink'
-import { Select, Spinner, TextInput } from '@inkjs/ui'
-import { useQuery } from '@tanstack/react-query'
 import type {
 	Client as EKonsulatClient,
-	Country,
 	Consulate,
+	Country,
 	Location
 } from '../../lib/e-konsulat.gov.pl/index.ts'
+
 import type { AppParams } from '../hooks/use-app-state.ts'
+
+import { Select, Spinner, TextInput } from '@inkjs/ui'
+import { useQuery } from '@tanstack/react-query'
+import { Box, Text } from 'ink'
+import { useState } from 'react'
 
 // Important countries to show first
 const IMPORTANT_COUNTRIES = ['RUSSIAN FEDERATION', 'MONTENEGRO', 'UKRAINE', 'BELARUS']
