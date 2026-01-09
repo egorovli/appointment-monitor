@@ -4,13 +4,13 @@
  */
 
 import type {
-	Client as EKonsulatClient,
 	Consulate,
 	Country,
+	EKonsulatClient,
 	Location
 } from '../../lib/e-konsulat.gov.pl/index.ts'
 
-import type { AppParams } from '../hooks/use-app-state.ts'
+import type { AppParams } from '../hooks/use-app-state.tsx'
 
 import { Select, Spinner, TextInput } from '@inkjs/ui'
 import { useQuery } from '@tanstack/react-query'

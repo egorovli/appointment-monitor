@@ -16,7 +16,6 @@ import { Box, Text } from 'ink'
 import { useEffect, useState } from 'react'
 
 import { getErrorTypeDescription, summarizeErrors } from '../lib/error-classifier.ts'
-import type { ErrorLog, ErrorType } from '../lib/error-classifier.ts'
 import { ErrorWindow } from './error-window.tsx'
 
 export interface StatsDisplayProps {
@@ -236,7 +235,6 @@ export function StatsDisplay({
 
 			<ErrorWindow
 				errors={[...search.errors, ...reservation.errors]}
-				maxLines={3}
 				title='Error Stats'
 			/>
 		</Box>

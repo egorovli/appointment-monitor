@@ -86,11 +86,18 @@ export class SimulationClient implements AsyncDisposable {
 		if (random < this.config.slotSearchSuccessRate) {
 			// Success - return random sample data
 			const samples = sampleCheckSlotsResults
-			const sample = samples[Math.floor(Math.random() * samples.length)]
+			const sampleIndex = Math.floor(Math.random() * samples.length)
+			const sample = samples[sampleIndex]
+
+			if (!sample) {
+				throw new Error('Simulation error: no slot samples found')
+			}
 
 			// Adapt sample to match input parameters
 			return {
 				...sample,
+				amount: input.amount,
+				slots: sample.slots || [],
 				locationId: Number.parseInt(input.locationId, 10),
 				token: this.generateToken() // Generate unique token for each call
 				// Keep other fields from sample (consulateId, serviceType, etc.)
@@ -128,11 +135,17 @@ export class SimulationClient implements AsyncDisposable {
 		if (random < this.config.slotReservationSuccessRate) {
 			// Success - return random sample data
 			const samples = sampleCreateReservationResults
-			const sample = samples[Math.floor(Math.random() * samples.length)]
+			const sampleIndex = Math.floor(Math.random() * samples.length)
+			const sample = samples[sampleIndex]
+
+			if (!sample) {
+				throw new Error('Simulation error: no reservation samples found')
+			}
 
 			// Adapt sample to match input date
 			return {
 				...sample,
+				ticket: sample.ticket || this.generateToken().substring(0, 8),
 				tickets: sample.tickets.map(ticket => ({
 					...ticket,
 					date: input.date // Use the requested date

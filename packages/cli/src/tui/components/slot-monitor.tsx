@@ -11,13 +11,10 @@ import type {
 	StatsState
 } from '../hooks/use-app-state.tsx'
 
-import type { ErrorLog } from '../lib/error-classifier.ts'
-
 import { ProgressBar, Spinner, StatusMessage } from '@inkjs/ui'
 import { Box, Text } from 'ink'
 import { format, isValid, parseISO } from 'date-fns'
 
-import { ErrorDetails, ErrorWindow } from './error-window.tsx'
 import { LogWindow } from './log-window.tsx'
 import { StatsDisplay } from './stats-display.tsx'
 
@@ -53,8 +50,6 @@ export function SlotMonitor({
 	phase,
 	logs
 }: SlotMonitorProps): React.ReactNode {
-	const allErrors: ErrorLog[] = [...search.errors, ...reservation.errors]
-
 	const slotDates = search.slots
 		.map(s => s.date)
 		.filter((d): d is string => Boolean(d))
@@ -69,7 +64,6 @@ export function SlotMonitor({
 		reservation.errors.length > 0 ||
 		search.slots.length > 0
 
-	const showErrors = allErrors.length > 0
 	const showLogs = logs.length > 0
 
 	// Get most recent critical log for status message
@@ -88,11 +82,11 @@ export function SlotMonitor({
 			gap={1}
 		>
 			{/* Status Message Header */}
-			{lastCriticalLog && (
+			{/* {lastCriticalLog && (
 				<StatusMessage variant={lastCriticalLog.level === 'error' ? 'error' : 'success'}>
 					{lastCriticalLog.message}
 				</StatusMessage>
-			)}
+			)} */}
 
 			{/* Header Section */}
 			<Box
