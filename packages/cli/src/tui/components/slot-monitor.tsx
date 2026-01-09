@@ -3,7 +3,12 @@
  * Shows real-time search and booking progress
  */
 
-import type { AppParams, ReservationState, SearchState } from '../hooks/use-app-state.ts'
+import type {
+	AppParams,
+	ReservationState,
+	SearchState,
+	StatsState
+} from '../hooks/use-app-state.ts'
 import type { ErrorType } from '../lib/error-classifier.ts'
 
 import { Spinner } from '@inkjs/ui'
@@ -11,10 +16,14 @@ import { Box, Text } from 'ink'
 
 import { getErrorTypeDescription, summarizeErrors } from '../lib/error-classifier.ts'
 
+import { ErrorWindow } from './error-window.tsx'
+import { StatsDisplay } from './stats-display.tsx'
+
 export interface SlotMonitorProps {
 	params: AppParams
 	search: SearchState
 	reservation: ReservationState
+	stats: StatsState
 	phase: 'searching' | 'booking'
 }
 
@@ -39,6 +48,7 @@ export function SlotMonitor({
 	params,
 	search,
 	reservation,
+	stats,
 	phase
 }: SlotMonitorProps): React.ReactNode {
 	const searchErrorSummary = summarizeErrors(search.errors)
@@ -71,6 +81,15 @@ export function SlotMonitor({
 				</Text>
 				<Text dimColor>People: {params.amount}</Text>
 			</Box>
+
+			{/* Stats */}
+			<StatsDisplay
+				stats={stats}
+				searchErrors={search.errors}
+				reservationErrors={reservation.errors}
+				searchAttempts={search.attempts}
+				reservationAttempts={reservation.attempts}
+			/>
 
 			{/* Divider */}
 			<Text>{'─'.repeat(50)}</Text>
@@ -158,6 +177,27 @@ export function SlotMonitor({
 
 			{/* Divider */}
 			<Text>{'─'.repeat(50)}</Text>
+
+			{/* Error Windows */}
+			<Box
+				flexDirection='row'
+				gap={2}
+			>
+				<Box flexGrow={1}>
+					<ErrorWindow
+						errors={search.errors}
+						maxLines={3}
+						title='Search Errors'
+					/>
+				</Box>
+				<Box flexGrow={1}>
+					<ErrorWindow
+						errors={reservation.errors}
+						maxLines={3}
+						title='Reservation Errors'
+					/>
+				</Box>
+			</Box>
 
 			{/* Footer */}
 			<Text dimColor>Press Ctrl+C to stop</Text>

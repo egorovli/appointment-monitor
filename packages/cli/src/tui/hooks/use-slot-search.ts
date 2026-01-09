@@ -44,6 +44,7 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 	const abortRef = useRef<AbortController | null>(null)
 	const isRunningRef = useRef(false)
 	const captchaFailureCountRef = useRef(0) // Track consecutive CAPTCHA failures for backoff
+	const phaseRef = useRef(state.phase) // Track current phase to avoid stale closures
 
 	const stop = useCallback(() => {
 		isRunningRef.current = false
@@ -55,18 +56,29 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 	}, [])
 
 	const runSearch = useCallback(async () => {
-		if (isRunningRef.current) {
+		if (isRunningRef.current || phaseRef.current === 'success') {
 			return
 		}
 		isRunningRef.current = true
+		// Set phase ref immediately so loops respect the new phase before React processes dispatches
+		phaseRef.current = 'searching'
 
 		dispatch({ type: 'START_SEARCH' })
 
-		while (isRunningRef.current && state.phase !== 'success') {
+		// CRITICAL: Use ref to check current phase, not closure
+		const checkShouldContinue = () => isRunningRef.current && phaseRef.current !== 'success'
+
+		while (checkShouldContinue()) {
+			// Double-check phase before each iteration
+			if (phaseRef.current === 'success') {
+				stop()
+				break
+			}
 			abortRef.current = new AbortController()
 
 			try {
 				dispatch({ type: 'INCREMENT_SEARCH_ATTEMPT' })
+				dispatch({ type: 'INCREMENT_CAPTCHA_ATTEMPT' })
 
 				// Step 1: Solve CAPTCHA
 				const captchaToken = await client.completeCaptcha()
@@ -87,8 +99,9 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 					signal: abortRef.current.signal
 				})
 
-				// Check if we should stop
-				if (!isRunningRef.current) {
+				// Check if we should stop (including success phase)
+				if (!isRunningRef.current || phaseRef.current === 'success') {
+					stop()
 					break
 				}
 
@@ -101,6 +114,9 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 					checkSlotsResult: result
 				})
 
+				// Update phase ref after dispatch (state will update on next render)
+				// We'll check it in the next iteration
+
 				// Notify if slots found
 				if (slots.length > 0 && onSlotsFound && result.token) {
 					onSlotsFound(slots, result.token)
@@ -109,8 +125,9 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 				// Wait before next attempt
 				await sleep(BASE_DELAY + getRandomJitter())
 			} catch (error) {
-				// Check if we should stop
-				if (!isRunningRef.current) {
+				// Check if we should stop (including success phase)
+				if (!isRunningRef.current || phaseRef.current === 'success') {
+					stop()
 					break
 				}
 
@@ -156,11 +173,25 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 		}
 
 		isRunningRef.current = false
-	}, [client, locationId, amount, dispatch, onSlotsFound, state.phase, stop])
+	}, [client, locationId, amount, dispatch, onSlotsFound, stop])
+
+	// Update phase ref when state changes
+	useEffect(() => {
+		phaseRef.current = state.phase
+		if (state.phase === 'success') {
+			stop()
+		}
+	}, [state.phase, stop])
 
 	// Start/stop search based on enabled prop
 	useEffect(() => {
-		if (enabled && !isRunningRef.current) {
+		// CRITICAL: Never start if already succeeded
+		if (phaseRef.current === 'success') {
+			stop()
+			return
+		}
+
+		if (enabled && !isRunningRef.current && phaseRef.current !== 'success') {
 			runSearch()
 		} else if (!enabled && isRunningRef.current) {
 			stop()

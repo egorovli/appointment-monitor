@@ -145,7 +145,7 @@ export function ParamSelector({ client, onComplete }: ParamSelectorProps): React
 	return (
 		<Box
 			flexDirection='column'
-			gap={1}
+			gap={0}
 		>
 			<Box>
 				<Text bold>Appointment Monitor</Text>
@@ -159,7 +159,17 @@ export function ParamSelector({ client, onComplete }: ParamSelectorProps): React
 
 			{/* Country selection */}
 			{step === 'country' && (
-				<Box flexDirection='column'>
+				<Box
+					flexDirection='column'
+					marginTop={
+						selection.countryName ||
+						selection.consulateName ||
+						selection.serviceName ||
+						selection.locationName
+							? 1
+							: 0
+					}
+				>
 					{countriesLoading && <Spinner label='Loading countries...' />}
 					{countriesError && <Text color='red'>Error: {String(countriesError)}</Text>}
 					{countries && countries.length > 0 && (
@@ -183,7 +193,10 @@ export function ParamSelector({ client, onComplete }: ParamSelectorProps): React
 
 			{/* Consulate selection */}
 			{step === 'consulate' && (
-				<Box flexDirection='column'>
+				<Box
+					flexDirection='column'
+					marginTop={selection.countryName ? 1 : 0}
+				>
 					{consulates.length === 0 && <Text color='red'>No consulates available</Text>}
 					{consulates.length > 0 && (
 						<>
@@ -207,7 +220,10 @@ export function ParamSelector({ client, onComplete }: ParamSelectorProps): React
 
 			{/* Service selection */}
 			{step === 'service' && (
-				<Box flexDirection='column'>
+				<Box
+					flexDirection='column'
+					marginTop={selection.consulateName ? 1 : 0}
+				>
 					{servicesLoading && <Spinner label='Loading services...' />}
 					{servicesError && <Text color='red'>Error: {String(servicesError)}</Text>}
 					{services && services.length === 0 && <Text color='red'>No services available</Text>}
@@ -233,7 +249,10 @@ export function ParamSelector({ client, onComplete }: ParamSelectorProps): React
 
 			{/* Location selection */}
 			{step === 'location' && (
-				<Box flexDirection='column'>
+				<Box
+					flexDirection='column'
+					marginTop={selection.serviceName ? 1 : 0}
+				>
 					{locations.length === 0 && <Text color='red'>No locations available</Text>}
 					{locations.length > 0 && (
 						<>
@@ -257,7 +276,10 @@ export function ParamSelector({ client, onComplete }: ParamSelectorProps): React
 
 			{/* Amount input */}
 			{step === 'amount' && (
-				<Box flexDirection='column'>
+				<Box
+					flexDirection='column'
+					marginTop={selection.locationName ? 1 : 0}
+				>
 					<Text>Number of people:</Text>
 					<TextInput
 						placeholder='Enter number...'

@@ -52,12 +52,20 @@ export interface ReservationState {
 	errors: ErrorLog[]
 }
 
+// Stats tracking
+export interface StatsState {
+	startTime: Date | undefined
+	captchaAttempts: number
+	captchaFailures: number
+}
+
 // Complete application state
 export interface AppState {
 	phase: AppPhase
 	params: AppParams | undefined
 	search: SearchState
 	reservation: ReservationState
+	stats: StatsState
 }
 
 // Action types
@@ -72,6 +80,8 @@ export type AppAction =
 	| { type: 'TRY_NEXT_SLOT' }
 	| { type: 'LOG_RESERVATION_ERROR'; error: ErrorLog }
 	| { type: 'RESERVATION_SUCCESS'; result: CreateReservationResult }
+	| { type: 'INCREMENT_CAPTCHA_ATTEMPT' }
+	| { type: 'INCREMENT_CAPTCHA_FAILURE' }
 	| { type: 'STOP_ALL' }
 	| { type: 'RESET' }
 
@@ -95,11 +105,18 @@ const initialReservationState: ReservationState = {
 	errors: []
 }
 
+const initialStatsState: StatsState = {
+	startTime: undefined,
+	captchaAttempts: 0,
+	captchaFailures: 0
+}
+
 const initialState: AppState = {
 	phase: 'params',
 	params: undefined,
 	search: initialSearchState,
-	reservation: initialReservationState
+	reservation: initialReservationState,
+	stats: initialStatsState
 }
 
 // Reducer function
@@ -122,6 +139,10 @@ function appReducer(state: AppState, action: AppAction): AppState {
 					lastAttempt: undefined,
 					slots: [],
 					errors: []
+				},
+				stats: {
+					...state.stats,
+					startTime: state.stats.startTime || new Date()
 				}
 			}
 
@@ -153,6 +174,13 @@ function appReducer(state: AppState, action: AppAction): AppState {
 				search: {
 					...state.search,
 					errors: [...state.search.errors, action.error]
+				},
+				stats: {
+					...state.stats,
+					captchaFailures:
+						action.error.type === 'captcha'
+							? state.stats.captchaFailures + 1
+							: state.stats.captchaFailures
 				}
 			}
 
@@ -194,10 +222,36 @@ function appReducer(state: AppState, action: AppAction): AppState {
 				reservation: {
 					...state.reservation,
 					errors: [...state.reservation.errors, action.error]
+				},
+				stats: {
+					...state.stats,
+					captchaFailures:
+						action.error.type === 'captcha'
+							? state.stats.captchaFailures + 1
+							: state.stats.captchaFailures
+				}
+			}
+
+		case 'INCREMENT_CAPTCHA_ATTEMPT':
+			return {
+				...state,
+				stats: {
+					...state.stats,
+					captchaAttempts: state.stats.captchaAttempts + 1
+				}
+			}
+
+		case 'INCREMENT_CAPTCHA_FAILURE':
+			return {
+				...state,
+				stats: {
+					...state.stats,
+					captchaFailures: state.stats.captchaFailures + 1
 				}
 			}
 
 		case 'RESERVATION_SUCCESS':
+			// CRITICAL: Ensure all loops stop immediately
 			return {
 				...state,
 				phase: 'success',
@@ -226,7 +280,10 @@ function appReducer(state: AppState, action: AppAction): AppState {
 			}
 
 		case 'RESET':
-			return initialState
+			return {
+				...initialState,
+				stats: initialStatsState
+			}
 
 		default:
 			return state

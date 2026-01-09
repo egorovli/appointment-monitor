@@ -12,7 +12,7 @@ import type {
 import type { SessionStorageData } from '../../lib/browser/session-injection.ts'
 
 import { Box, Text } from 'ink'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import {
 	buildSessionStorageData,
@@ -65,6 +65,7 @@ export function SuccessDisplay({
 	const [copied, setCopied] = useState(false)
 	const [savedPath, setSavedPath] = useState<string | undefined>()
 	const [error, setError] = useState<string | undefined>()
+	const hasInitializedRef = useRef(false)
 
 	// Build session data
 	const sessionData = buildSessionStorageData({
@@ -81,8 +82,14 @@ export function SuccessDisplay({
 	const ticketDate = firstTicket?.date || 'Unknown'
 	const ticketTime = firstTicket?.time || ''
 
-	// Copy to clipboard and save on mount
+	// Copy to clipboard and save on mount - ONLY ONCE
 	useEffect(() => {
+		// Guard: only run once
+		if (hasInitializedRef.current) {
+			return
+		}
+		hasInitializedRef.current = true
+
 		const init = async () => {
 			// Try to copy to clipboard
 			try {
@@ -94,7 +101,7 @@ export function SuccessDisplay({
 				console.error('Failed to copy to clipboard:', e)
 			}
 
-			// Save reservation data
+			// Save reservation data - ONLY ONCE
 			try {
 				const path = await saveReservationData({
 					reservationResult: result,
@@ -109,7 +116,8 @@ export function SuccessDisplay({
 		}
 
 		init()
-	}, [consoleScript, result, checkSlotsResult, consulateDetails])
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []) // Empty deps - only run once on mount
 
 	return (
 		<Box

@@ -1,3 +1,5 @@
+export * from './error-window.tsx'
 export * from './param-selector.tsx'
 export * from './slot-monitor.tsx'
+export * from './stats-display.tsx'
 export * from './success-display.tsx'

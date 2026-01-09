@@ -74,19 +74,40 @@ function AppContent({ client, solver }: AppContentProps): React.ReactNode {
 		)
 	}
 
-	if (
-		state.phase === 'success' &&
-		state.reservation.result &&
-		state.search.checkSlotsResult &&
-		state.reservation.consulateDetails
-	) {
-		return (
-			<SuccessDisplay
-				result={state.reservation.result}
-				checkSlotsResult={state.search.checkSlotsResult}
-				consulateDetails={state.reservation.consulateDetails}
-			/>
-		)
+	// CRITICAL: Show success screen if we have a result, even if phase check fails
+	if (state.phase === 'success' || state.reservation.result) {
+		// Ensure we have all required data for success display
+		if (
+			state.reservation.result &&
+			state.search.checkSlotsResult &&
+			state.reservation.consulateDetails
+		) {
+			return (
+				<SuccessDisplay
+					result={state.reservation.result}
+					checkSlotsResult={state.search.checkSlotsResult}
+					consulateDetails={state.reservation.consulateDetails}
+				/>
+			)
+		}
+		// If we have result but missing data, show error
+		if (state.reservation.result) {
+			return (
+				<ink.Box flexDirection='column'>
+					<ink.Text
+						color='red'
+						bold
+					>
+						Reservation succeeded but missing data!
+					</ink.Text>
+					<ink.Text>Result: {JSON.stringify(state.reservation.result, null, 2)}</ink.Text>
+					<ink.Text>Has checkSlotsResult: {state.search.checkSlotsResult ? 'yes' : 'no'}</ink.Text>
+					<ink.Text>
+						Has consulateDetails: {state.reservation.consulateDetails ? 'yes' : 'no'}
+					</ink.Text>
+				</ink.Box>
+			)
+		}
 	}
 
 	// Phase: searching or booking
@@ -100,18 +121,21 @@ interface MonitoringViewProps {
 function MonitoringView({ client }: MonitoringViewProps): React.ReactNode {
 	const { state } = useAppState()
 
+	// CRITICAL: Don't start any loops if already succeeded
+	const shouldRun = state.phase === 'searching' || state.phase === 'booking'
+
 	// Start slot search
 	useSlotSearch({
 		client,
 		locationId: state.params?.locationId || '',
 		amount: state.params?.amount || 1,
-		enabled: state.phase === 'searching' || state.phase === 'booking'
+		enabled: shouldRun
 	})
 
 	// Start reservation when slots are found
 	useReservation({
 		client,
-		enabled: state.search.slots.length > 0
+		enabled: shouldRun && state.search.slots.length > 0
 	})
 
 	// Determine current phase for UI
@@ -126,6 +150,7 @@ function MonitoringView({ client }: MonitoringViewProps): React.ReactNode {
 			params={state.params}
 			search={state.search}
 			reservation={state.reservation}
+			stats={state.stats}
 			phase={phase}
 		/>
 	)

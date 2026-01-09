@@ -34,8 +34,14 @@ const SLOT_SWITCH_DELAY = 100
 export function useReservation(options: UseReservationOptions): UseReservationResult {
 	const { client, enabled, onSuccess } = options
 	const { state, dispatch } = useAppState()
+	const stateRef = useRef(state)
 	const isRunningRef = useRef(false)
 	const abortRef = useRef<AbortController | null>(null)
+
+	// Keep a ref of the latest state to avoid stale closures in long-running loops
+	useEffect(() => {
+		stateRef.current = state
+	}, [state])
 
 	const stop = useCallback(() => {
 		isRunningRef.current = false
@@ -46,7 +52,15 @@ export function useReservation(options: UseReservationOptions): UseReservationRe
 	}, [])
 
 	const attemptReservation = useCallback(async () => {
-		const { search, reservation, params } = state
+		const currentState = stateRef.current
+
+		// CRITICAL: Check phase first - if already succeeded, don't attempt
+		if (currentState.phase === 'success') {
+			stop()
+			return false
+		}
+
+		const { search, reservation, params } = currentState
 
 		// Check prerequisites
 		if (!search.checkSlotsResult?.token || !params) {
@@ -85,6 +99,8 @@ export function useReservation(options: UseReservationOptions): UseReservationRe
 			})
 
 			// Success! (client throws if bilet is null, so if we get here it's valid)
+			// CRITICAL: Stop immediately before dispatching
+			stop()
 			dispatch({ type: 'RESERVATION_SUCCESS', result })
 
 			if (onSuccess) {
@@ -93,6 +109,12 @@ export function useReservation(options: UseReservationOptions): UseReservationRe
 
 			return true
 		} catch (error) {
+			// CRITICAL: Check phase again after error - might have succeeded elsewhere
+			if (stateRef.current.phase === 'success') {
+				stop()
+				return false
+			}
+
 			// Log the error
 			const errorLog = createErrorLog(error, {
 				slotDate: slot.date,
@@ -119,7 +141,7 @@ export function useReservation(options: UseReservationOptions): UseReservationRe
 			await sleep(RETRY_DELAY)
 			return false
 		}
-	}, [state, client, dispatch, onSuccess, stop])
+	}, [client, dispatch, onSuccess, stop])
 
 	const runReservationLoop = useCallback(async () => {
 		if (isRunningRef.current) {
@@ -127,9 +149,20 @@ export function useReservation(options: UseReservationOptions): UseReservationRe
 		}
 		isRunningRef.current = true
 
-		while (isRunningRef.current && state.phase !== 'success') {
+		// CRITICAL: Use a function to get current state, not closure
+		const checkShouldContinue = () => isRunningRef.current && stateRef.current.phase !== 'success'
+
+		while (checkShouldContinue()) {
+			const currentState = stateRef.current
+
+			// Double-check phase before each iteration
+			if (currentState.phase === 'success') {
+				stop()
+				break
+			}
+
 			// Wait for slots to be available
-			if (state.search.slots.length === 0) {
+			if (currentState.search.slots.length === 0) {
 				await sleep(100)
 				continue
 			}
@@ -137,7 +170,7 @@ export function useReservation(options: UseReservationOptions): UseReservationRe
 			// Attempt reservation
 			const success = await attemptReservation()
 
-			if (success) {
+			if (success || stateRef.current.phase === 'success') {
 				isRunningRef.current = false
 				break
 			}
@@ -147,10 +180,16 @@ export function useReservation(options: UseReservationOptions): UseReservationRe
 		}
 
 		isRunningRef.current = false
-	}, [state.phase, state.search.slots.length, attemptReservation])
+	}, [attemptReservation, stop])
 
 	// Start reservation when enabled and we have slots
 	useEffect(() => {
+		// CRITICAL: Never start if already succeeded
+		if (state.phase === 'success') {
+			stop()
+			return
+		}
+
 		if (
 			enabled &&
 			state.search.slots.length > 0 &&
