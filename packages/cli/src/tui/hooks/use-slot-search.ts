@@ -29,6 +29,9 @@ export interface UseSlotSearchResult {
 // Delay between search attempts (ms)
 const BASE_DELAY = 500
 const SOFT_RATE_LIMIT_DELAY = 3000
+const CAPTCHA_FAILURE_DELAY = 2000 // Base delay for CAPTCHA failures
+const CAPTCHA_BACKOFF_MULTIPLIER = 1.5 // Exponential backoff multiplier
+const CAPTCHA_MAX_DELAY = 10000 // Maximum delay for CAPTCHA backoff
 const JITTER_MAX = 1000
 
 function getRandomJitter(): number {
@@ -40,9 +43,11 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 	const { state, dispatch } = useAppState()
 	const abortRef = useRef<AbortController | null>(null)
 	const isRunningRef = useRef(false)
+	const captchaFailureCountRef = useRef(0) // Track consecutive CAPTCHA failures for backoff
 
 	const stop = useCallback(() => {
 		isRunningRef.current = false
+		captchaFailureCountRef.current = 0 // Reset CAPTCHA failure count when stopping
 		if (abortRef.current) {
 			abortRef.current.abort()
 			abortRef.current = null
@@ -65,6 +70,9 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 
 				// Step 1: Solve CAPTCHA
 				const captchaToken = await client.completeCaptcha()
+
+				// Reset CAPTCHA failure count on success
+				captchaFailureCountRef.current = 0
 
 				// Check if we should stop
 				if (!isRunningRef.current) {
@@ -121,12 +129,26 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 				const errorType = classifyError(error)
 				let delay = BASE_DELAY
 
-				if (errorType === 'rate_limit_soft') {
+				if (errorType === 'captcha') {
+					// CAPTCHA failure - exponential backoff
+					captchaFailureCountRef.current++
+					const backoffDelay =
+						CAPTCHA_FAILURE_DELAY *
+						CAPTCHA_BACKOFF_MULTIPLIER ** (captchaFailureCountRef.current - 1)
+					delay = Math.min(backoffDelay, CAPTCHA_MAX_DELAY) + getRandomJitter()
+				} else if (errorType === 'rate_limit_soft') {
 					// Soft rate limit - wait longer with jitter
 					delay = SOFT_RATE_LIMIT_DELAY + getRandomJitter() * 2
+					// Reset CAPTCHA failure count on rate limit (different error type)
+					captchaFailureCountRef.current = 0
 				} else if (errorType === 'timeout' || errorType === 'network') {
 					// Network issues - slightly longer delay
 					delay = BASE_DELAY * 2 + getRandomJitter()
+					// Reset CAPTCHA failure count on network error (different error type)
+					captchaFailureCountRef.current = 0
+				} else {
+					// Other errors - reset CAPTCHA failure count
+					captchaFailureCountRef.current = 0
 				}
 
 				await sleep(delay)
