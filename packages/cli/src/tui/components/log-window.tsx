@@ -1,5 +1,6 @@
 import type { LogEntry } from '../hooks/use-app-state.tsx'
 
+import { StatusMessage } from '@inkjs/ui'
 import { Box, Text } from 'ink'
 
 export interface LogWindowProps {
@@ -23,14 +24,14 @@ function truncate(text: string, maxLength: number): string {
 	return `${text.slice(0, maxLength - 3)}...`
 }
 
-function levelColor(level: LogEntry['level']): string {
+function getStatusVariant(level: LogEntry['level']): 'info' | 'warning' | 'error' | 'success' {
 	switch (level) {
 		case 'warn':
-			return 'yellow'
+			return 'warning'
 		case 'error':
-			return 'red'
+			return 'error'
 		default:
-			return 'cyan'
+			return 'info'
 	}
 }
 
@@ -49,22 +50,37 @@ export function LogWindow({ logs, maxLines = 10 }: LogWindowProps): React.ReactN
 				bold
 				color='cyan'
 			>
-				Activity
+				ACTIVITY LOG
 			</Text>
+
 			{recentLogs.length === 0 ? (
-				<Text dimColor>No activity yet</Text>
+				<Text
+					dimColor
+					italic
+				>
+					Waiting for activity...
+				</Text>
 			) : (
-				recentLogs.map((log, index) => (
-					<Text
-						key={`${log.timestamp.getTime()}-${index}`}
-						wrap='truncate'
-					>
-						<Text color={levelColor(log.level)}>{log.level.toUpperCase()}</Text>
-						<Text dimColor> - </Text>
-						<Text>{truncate(log.message, 90)}</Text>
-						<Text dimColor> - {formatLogTime(log.timestamp)}</Text>
-					</Text>
-				))
+				recentLogs.map((log, index) => {
+					// Check if message looks like a success message
+					const variant =
+						log.message.toLowerCase().includes('success') ||
+						log.message.toLowerCase().includes('solved') ||
+						log.message.toLowerCase().includes('found')
+							? 'success'
+							: getStatusVariant(log.level)
+
+					return (
+						<Box key={`${log.timestamp.getTime()}-${index}`}>
+							<StatusMessage variant={variant}>
+								{variant === 'error' && <Text dimColor> </Text>}
+								<Text dimColor>[{formatLogTime(log.timestamp)}]</Text>
+								<Text dimColor> </Text>
+								<Text>{truncate(log.message, 120)}</Text>
+							</StatusMessage>
+						</Box>
+					)
+				})
 			)}
 		</Box>
 	)

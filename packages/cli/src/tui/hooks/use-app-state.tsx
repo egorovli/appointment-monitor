@@ -50,6 +50,8 @@ export interface SearchState {
 	currentToken: string | undefined
 	checkSlotsResult: CheckSlotsResult | undefined
 	errors: ErrorLog[]
+	nextAttemptAt: Date | undefined
+	cooldownDurationMs: number | undefined
 }
 
 // Reservation state
@@ -60,6 +62,8 @@ export interface ReservationState {
 	result: CreateReservationResult | undefined
 	consulateDetails: ConsulateDetails | undefined
 	errors: ErrorLog[]
+	nextAttemptAt: Date | undefined
+	cooldownDurationMs: number | undefined
 }
 
 // Stats tracking
@@ -97,6 +101,8 @@ export type AppAction =
 	| { type: 'INCREMENT_CAPTCHA_ATTEMPT' }
 	| { type: 'INCREMENT_CAPTCHA_FAILURE' }
 	| { type: 'LOG_CAPTCHA_SUCCESS'; durationMs: number }
+	| { type: 'SET_SEARCH_COOLDOWN'; nextAttemptAt: Date | undefined; durationMs?: number }
+	| { type: 'SET_RESERVATION_COOLDOWN'; nextAttemptAt: Date | undefined; durationMs?: number }
 	| { type: 'APPEND_LOG'; entry: LogEntry }
 	| { type: 'STOP_ALL' }
 	| { type: 'RESET' }
@@ -109,7 +115,9 @@ const initialSearchState: SearchState = {
 	slots: [],
 	currentToken: undefined,
 	checkSlotsResult: undefined,
-	errors: []
+	errors: [],
+	nextAttemptAt: undefined,
+	cooldownDurationMs: undefined
 }
 
 const initialReservationState: ReservationState = {
@@ -118,7 +126,9 @@ const initialReservationState: ReservationState = {
 	currentSlotIndex: 0,
 	result: undefined,
 	consulateDetails: undefined,
-	errors: []
+	errors: [],
+	nextAttemptAt: undefined,
+	cooldownDurationMs: undefined
 }
 
 const initialStatsState: StatsState = {
@@ -304,6 +314,26 @@ function appReducer(state: AppState, action: AppAction): AppState {
 				}
 			}
 
+		case 'SET_SEARCH_COOLDOWN':
+			return {
+				...state,
+				search: {
+					...state.search,
+					nextAttemptAt: action.nextAttemptAt,
+					cooldownDurationMs: action.durationMs
+				}
+			}
+
+		case 'SET_RESERVATION_COOLDOWN':
+			return {
+				...state,
+				reservation: {
+					...state.reservation,
+					nextAttemptAt: action.nextAttemptAt,
+					cooldownDurationMs: action.durationMs
+				}
+			}
+
 		case 'RESERVATION_SUCCESS':
 			// CRITICAL: Ensure all loops stop immediately
 			return {
@@ -321,11 +351,9 @@ function appReducer(state: AppState, action: AppAction): AppState {
 			}
 
 		case 'APPEND_LOG': {
-			const logs = [...state.logs, action.entry].slice(-200)
-
 			return {
 				...state,
-				logs
+				logs: [...state.logs, action.entry].slice(-200)
 			}
 		}
 

@@ -82,7 +82,7 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 		dispatch({ type: 'START_SEARCH' })
 		lastNotifiedTokenRef.current = undefined
 		logEvent(
-			`[SEARCH] Started${paramsRef.current ? ` (${paramsRef.current.consulateName} / ${paramsRef.current.serviceName})` : ''}`
+			`Looking for appointments at ${paramsRef.current?.consulateName || 'the selected consulate'} for ${paramsRef.current?.serviceName || 'the service'}.`
 		)
 
 		// CRITICAL: Use ref to check current phase, not closure
@@ -100,7 +100,7 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 				const captchaToken = await client.completeCaptcha()
 				const captchaDuration = Date.now() - captchaStart
 				dispatch({ type: 'LOG_CAPTCHA_SUCCESS', durationMs: captchaDuration })
-				logEvent(`[CAPTCHA] Solved in ${(captchaDuration / 1000).toFixed(2)}s`)
+				logEvent(`Successfully solved the captcha in ${(captchaDuration / 1000).toFixed(2)}s.`)
 
 				// Reset CAPTCHA failure count on success
 				captchaFailureCountRef.current = 0
@@ -140,7 +140,7 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 					lastNotifiedTokenRef.current = result.token
 					const locationName = paramsRef.current?.consulateName ?? paramsRef.current?.locationName
 					logEvent(
-						`[SEARCH] Slots found (${slots.length})${locationName ? ` @ ${locationName}` : ''}`
+						`Found ${slots.length} available slots${locationName ? ` at ${locationName}` : ''}!`
 					)
 					notifySlotsFound({
 						count: slots.length,
@@ -154,7 +154,14 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 				}
 
 				// Wait before next attempt
-				await sleep(BASE_DELAY + getRandomJitter())
+				const delayMs = BASE_DELAY + getRandomJitter()
+				dispatch({
+					type: 'SET_SEARCH_COOLDOWN',
+					nextAttemptAt: new Date(Date.now() + delayMs),
+					durationMs: delayMs
+				})
+				await sleep(delayMs)
+				dispatch({ type: 'SET_SEARCH_COOLDOWN', nextAttemptAt: undefined, durationMs: undefined })
 			} catch (error) {
 				// Check if we should stop
 				if (!isRunningRef.current) {
@@ -167,7 +174,7 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 				dispatch({ type: 'LOG_SEARCH_ERROR', error: errorLog })
 				const errorType = classifyError(error)
 				logEvent(
-					`[SEARCH] Error (${errorType}): ${
+					`Encountered an issue (${errorType}): ${
 						error instanceof Error ? error.message : String(error)
 					}`,
 					errorType === 'rate_limit_hard' ? 'warn' : 'error'
@@ -175,8 +182,7 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 
 				// Check for hard rate limit - stop completely
 				if (isHardRateLimit(error)) {
-					console.error('[SLOT SEARCH] Hard rate limit detected - stopping')
-					logEvent('[SEARCH] Hard rate limit detected - stopping', 'warn')
+					logEvent('Your IP address has been temporarily blocked. Stopping the monitor.', 'warn')
 					stop()
 					break
 				}
@@ -206,7 +212,13 @@ export function useSlotSearch(options: UseSlotSearchOptions): UseSlotSearchResul
 					captchaFailureCountRef.current = 0
 				}
 
+				dispatch({
+					type: 'SET_SEARCH_COOLDOWN',
+					nextAttemptAt: new Date(Date.now() + delay),
+					durationMs: delay
+				})
 				await sleep(delay)
+				dispatch({ type: 'SET_SEARCH_COOLDOWN', nextAttemptAt: undefined, durationMs: undefined })
 			}
 		}
 

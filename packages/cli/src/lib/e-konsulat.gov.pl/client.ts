@@ -272,9 +272,8 @@ export class Client implements AsyncDisposable {
 					responseBody = `<<failed to read body: ${bodyError instanceof Error ? bodyError.message : String(bodyError)}>>`
 				}
 
-				let logPath: string | undefined
 				if (response.status === 403) {
-					logPath = this.logCaptchaFailure({
+					this.logCaptchaFailure({
 						status: response.status,
 						statusText: response.statusText,
 						headers: Array.from(response.headers.entries()),
@@ -282,11 +281,7 @@ export class Client implements AsyncDisposable {
 					})
 				}
 
-				throw new Error(
-					`Failed to verify CAPTCHA: HTTP ${response.status} ${response.statusText}${
-						logPath ? ` (logged at ${logPath})` : ''
-					}`
-				)
+				throw new Error(`Failed to verify CAPTCHA: HTTP ${response.status} ${response.statusText}`)
 			}
 
 			const data = (await response.json()) as CaptchaVerificationResponse
@@ -343,10 +338,8 @@ export class Client implements AsyncDisposable {
 			].join('\n')
 
 			fs.writeFileSync(logPath, content, 'utf8')
-			console.error(`[CAPTCHA] Logged HTTP 403 verification response to ${logPath}`)
 			return logPath
 		} catch (error) {
-			console.error('[CAPTCHA] Failed to log HTTP 403 verification response', error)
 			return undefined
 		}
 	}

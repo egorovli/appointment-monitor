@@ -11,14 +11,13 @@ import type {
 	StatsState
 } from '../hooks/use-app-state.tsx'
 
-import type { ErrorLog, ErrorType } from '../lib/error-classifier.ts'
+import type { ErrorLog } from '../lib/error-classifier.ts'
 
-import { Spinner } from '@inkjs/ui'
+import { ProgressBar, Spinner, StatusMessage } from '@inkjs/ui'
 import { Box, Text } from 'ink'
 import { format, isValid, parseISO } from 'date-fns'
 
-import { getErrorTypeDescription, summarizeErrors } from '../lib/error-classifier.ts'
-import { ErrorWindow } from './error-window.tsx'
+import { ErrorDetails, ErrorWindow } from './error-window.tsx'
 import { LogWindow } from './log-window.tsx'
 import { StatsDisplay } from './stats-display.tsx'
 
@@ -46,25 +45,6 @@ function formatDateLabel(date: string): string {
 	return date
 }
 
-function formatErrorBreakdown(errors: ErrorLog[]): string[] {
-	const summary = summarizeErrors(errors)
-	return Object.entries(summary)
-		.filter(([_, count]) => count > 0)
-		.map(([type, count]) => `${count} ${getErrorTypeDescription(type as ErrorType).toLowerCase()}`)
-}
-
-const Divider = ({ color, dimColor }: { color?: string; dimColor?: boolean }) => (
-	<Box
-		borderStyle='single'
-		borderTop={true}
-		borderBottom={false}
-		borderLeft={false}
-		borderRight={false}
-		borderColor={color}
-		dimColor={dimColor}
-	/>
-)
-
 export function SlotMonitor({
 	params,
 	search,
@@ -73,8 +53,6 @@ export function SlotMonitor({
 	phase,
 	logs
 }: SlotMonitorProps): React.ReactNode {
-	const searchErrorBreakdown = formatErrorBreakdown(search.errors)
-	const reservationErrorBreakdown = formatErrorBreakdown(reservation.errors)
 	const allErrors: ErrorLog[] = [...search.errors, ...reservation.errors]
 
 	const slotDates = search.slots
@@ -82,10 +60,10 @@ export function SlotMonitor({
 		.filter((d): d is string => Boolean(d))
 		.map(formatDateLabel)
 
-	const visibleDates = slotDates.slice(0, 3)
+	const visibleDates = slotDates.slice(0, 5)
 	const remainingDates = Math.max(slotDates.length - visibleDates.length, 0)
 
-	const hasReservationSection =
+	const showReservation =
 		reservation.isRunning ||
 		reservation.attempts > 0 ||
 		reservation.errors.length > 0 ||
@@ -94,19 +72,58 @@ export function SlotMonitor({
 	const showErrors = allErrors.length > 0
 	const showLogs = logs.length > 0
 
+	// Get most recent critical log for status message
+	const lastCriticalLog = [...logs]
+		.reverse()
+		.find(l => l.level === 'error' || l.message.includes('Success') || l.message.includes('found'))
+
+	const totalSlots = search.slots.length
+	const reservationProgress =
+		totalSlots > 0 ? ((reservation.currentSlotIndex + 1) / totalSlots) * 100 : 0
+
 	return (
 		<Box
 			flexDirection='column'
+			padding={1}
 			gap={1}
 		>
-			<Box flexDirection='column'>
-				<Text bold>Monitoring: {params.consulateName}</Text>
-				<Text dimColor>
-					Service: {params.serviceName} | Location: {params.locationName}
-				</Text>
-				<Text dimColor>People: {params.amount}</Text>
+			{/* Status Message Header */}
+			{lastCriticalLog && (
+				<StatusMessage variant={lastCriticalLog.level === 'error' ? 'error' : 'success'}>
+					{lastCriticalLog.message}
+				</StatusMessage>
+			)}
+
+			{/* Header Section */}
+			<Box
+				flexDirection='column'
+				borderStyle='round'
+				borderColor='blue'
+				paddingX={1}
+			>
+				<Box justifyContent='space-between'>
+					<Text
+						bold
+						color='blue'
+					>
+						MONITORING: {params.consulateName.toUpperCase()}
+					</Text>
+					<Text dimColor>Press Ctrl+C to stop</Text>
+				</Box>
+				<Box gap={2}>
+					<Text dimColor>
+						Service: <Text color='white'>{params.serviceName}</Text>
+					</Text>
+					<Text dimColor>
+						Location: <Text color='white'>{params.locationName}</Text>
+					</Text>
+					<Text dimColor>
+						People: <Text color='white'>{params.amount}</Text>
+					</Text>
+				</Box>
 			</Box>
 
+			{/* Main Stats Grid */}
 			<StatsDisplay
 				phase={phase}
 				stats={stats}
@@ -114,116 +131,151 @@ export function SlotMonitor({
 				reservation={reservation}
 			/>
 
-			<Divider dimColor />
-
 			<Box
-				flexDirection='column'
+				flexDirection='row'
 				gap={1}
+				flexWrap='wrap'
 			>
-				<Box alignItems='center'>
-					<Text bold>SLOT SEARCH </Text>
-					{search.isRunning ? <Spinner /> : <Text color='yellow'>Paused</Text>}
-				</Box>
-				<Box gap={2}>
-					<Text>
-						Attempts: <Text color='cyan'>{search.attempts}</Text>
-					</Text>
-					<Text>
-						Last: <Text color='cyan'>{formatTime(search.lastAttempt)}</Text>
-					</Text>
-					<Text>
-						Slots:{' '}
-						<Text color={search.slots.length > 0 ? 'green' : 'yellow'}>{search.slots.length}</Text>
-					</Text>
-				</Box>
-				{searchErrorBreakdown.length > 0 && (
-					<Text dimColor>Errors: {searchErrorBreakdown.join(' | ')}</Text>
-				)}
-				{visibleDates.length > 0 && (
+				{/* Slot Search Section */}
+				<Box
+					flexDirection='column'
+					borderStyle='round'
+					borderColor={search.isRunning ? 'green' : 'yellow'}
+					paddingX={1}
+					minWidth={30}
+					flexGrow={1}
+				>
+					<Box justifyContent='space-between'>
+						<Text bold>SLOT SEARCH</Text>
+						{search.isRunning ? <Spinner label='SEARCHING' /> : <Text color='yellow'>PAUSED</Text>}
+					</Box>
 					<Box
 						flexDirection='column'
 						marginTop={1}
-						gap={0}
 					>
-						<Text
-							color='green'
-							bold
-						>
-							Available dates:
-						</Text>
-						{visibleDates.map(date => (
-							<Text
-								key={date}
-								color='green'
-							>
-								- {date}
+						<Box justifyContent='space-between'>
+							<Text dimColor>Attempts:</Text>
+							<Text color='cyan'>{search.attempts}</Text>
+						</Box>
+						<Box justifyContent='space-between'>
+							<Text dimColor>Last Attempt:</Text>
+							<Text color='cyan'>{formatTime(search.lastAttempt)}</Text>
+						</Box>
+						<Box justifyContent='space-between'>
+							<Text dimColor>Available Slots:</Text>
+							<Text color={search.slots.length > 0 ? 'green' : 'yellow'}>
+								{search.slots.length}
 							</Text>
-						))}
-						{remainingDates > 0 && <Text dimColor>... and {remainingDates} more</Text>}
+						</Box>
+
+						{visibleDates.length > 0 && (
+							<Box
+								flexDirection='column'
+								marginTop={1}
+								borderStyle='single'
+								borderTop={true}
+								borderBottom={false}
+								borderLeft={false}
+								borderRight={false}
+								borderColor='green'
+								paddingTop={1}
+							>
+								<Text
+									color='green'
+									bold
+								>
+									AVAILABLE DATES:
+								</Text>
+								{visibleDates.map(date => (
+									<Text
+										key={date}
+										color='green'
+									>
+										• {date}
+									</Text>
+								))}
+								{remainingDates > 0 && (
+									<Text
+										dimColor
+										italic
+									>
+										+ {remainingDates} more...
+									</Text>
+								)}
+							</Box>
+						)}
+					</Box>
+				</Box>
+
+				{/* Reservation Section (Conditional) */}
+				{showReservation && (
+					<Box
+						flexDirection='column'
+						borderStyle='round'
+						borderColor={reservation.isRunning ? 'magenta' : 'gray'}
+						paddingX={1}
+						minWidth={30}
+						flexGrow={1}
+					>
+						<Box justifyContent='space-between'>
+							<Text bold>RESERVATION</Text>
+							{reservation.isRunning && <Spinner label='BOOKING' />}
+						</Box>
+						<Box
+							flexDirection='column'
+							marginTop={1}
+						>
+							<Box justifyContent='space-between'>
+								<Text dimColor>Attempts:</Text>
+								<Text color='cyan'>{reservation.attempts}</Text>
+							</Box>
+							<Box justifyContent='space-between'>
+								<Text dimColor>Current Slot:</Text>
+								<Text color='cyan'>
+									{search.slots.length === 0
+										? '--'
+										: `${reservation.currentSlotIndex + 1} / ${search.slots.length}`}
+								</Text>
+							</Box>
+
+							{reservation.isRunning && totalSlots > 0 && (
+								<Box
+									marginTop={1}
+									flexDirection='column'
+									gap={0}
+								>
+									<Text dimColor>Progress:</Text>
+									<ProgressBar value={reservationProgress} />
+								</Box>
+							)}
+
+							<Box
+								justifyContent='space-between'
+								marginTop={1}
+							>
+								<Text dimColor>Status:</Text>
+								{reservation.result ? (
+									<Text color='green'>COMPLETED</Text>
+								) : reservation.isRunning ? (
+									<Text color='magenta'>BOOKING...</Text>
+								) : search.slots.length > 0 ? (
+									<Text color='cyan'>READY</Text>
+								) : (
+									<Text color='yellow'>WAITING FOR SLOTS</Text>
+								)}
+							</Box>
+						</Box>
 					</Box>
 				)}
 			</Box>
 
-			{hasReservationSection && (
-				<>
-					<Divider dimColor />
-					<Box
-						flexDirection='column'
-						gap={1}
-					>
-						<Box alignItems='center'>
-							<Text bold>RESERVATION </Text>
-							{reservation.isRunning && <Spinner />}
-							{!reservation.isRunning && search.slots.length === 0 && (
-								<Text color='yellow'>Waiting for slots...</Text>
-							)}
-							{!reservation.isRunning && search.slots.length > 0 && phase === 'searching' && (
-								<Text color='cyan'>Ready</Text>
-							)}
-							{reservation.result && <Text color='green'>Completed</Text>}
-						</Box>
-						<Box gap={2}>
-							<Text>
-								Attempts: <Text color='cyan'>{reservation.attempts}</Text>
-							</Text>
-							<Text>
-								Current slot:{' '}
-								<Text color='cyan'>
-									{search.slots.length === 0
-										? '--'
-										: `${reservation.currentSlotIndex + 1}/${search.slots.length}`}
-								</Text>
-							</Text>
-						</Box>
-						{reservationErrorBreakdown.length > 0 && (
-							<Text dimColor>Errors: {reservationErrorBreakdown.join(' | ')}</Text>
-						)}
-					</Box>
-				</>
-			)}
-
-			{showErrors && (
-				<>
-					<Divider dimColor />
-					<ErrorWindow
-						errors={allErrors}
-						maxLines={5}
-						title='Recent errors'
-					/>
-				</>
-			)}
-
+			{/* Logs Section (Conditional) */}
 			{showLogs && (
-				<>
-					<Divider dimColor />
-					<LogWindow
-						logs={logs}
-						maxLines={10}
-					/>
-				</>
+				<LogWindow
+					logs={logs}
+					maxLines={10}
+				/>
 			)}
-
-			<Text dimColor>Press Ctrl+C to stop</Text>
 		</Box>
 	)
 }

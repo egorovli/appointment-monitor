@@ -102,7 +102,7 @@ export function useReservation(options: UseReservationOptions): UseReservationRe
 		try {
 			dispatch({ type: 'INCREMENT_RESERVATION_ATTEMPT' })
 			logEvent(
-				`[RESERVATION] Attempt ${reservation.attempts + 1} on ${slot.date} (${slotIndex + 1}/${slots.length})`
+				`Attempting to book a slot on ${slot.date} (round attempt ${reservation.attempts + 1}).`
 			)
 
 			const result = await client.createReservation({
@@ -117,9 +117,9 @@ export function useReservation(options: UseReservationOptions): UseReservationRe
 			// CRITICAL: Stop immediately before dispatching
 			stop()
 			logEvent(
-				`[RESERVATION] Success${slot.date ? ` for ${slot.date}` : ''}${
-					params ? ` @ ${params.consulateName}` : ''
-				}`,
+				`Great news! Appointment successfully booked for ${slot.date}${
+					params ? ` at ${params.consulateName}` : ''
+				}.`,
 				'info'
 			)
 			notifyReservationSuccess({
@@ -151,26 +151,47 @@ export function useReservation(options: UseReservationOptions): UseReservationRe
 
 			// Check for hard rate limit - stop completely
 			if (isHardRateLimit(error)) {
-				console.error('[RESERVATION] Hard rate limit detected - stopping')
-				logEvent('[RESERVATION] Hard rate limit detected - stopping', 'warn')
+				logEvent('IP address blocked during booking. Stopping the monitor.', 'warn')
 				stop()
 				return false
 			}
 
 			// Slot unavailable - try next slot immediately
 			if (error instanceof SlotUnavailableError) {
-				logEvent(`[RESERVATION] Slot became unavailable (${slot.date})`, 'warn')
+				logEvent(`The slot on ${slot.date} is no longer available. Trying another one...`, 'warn')
 				dispatch({ type: 'TRY_NEXT_SLOT' })
-				await sleep(SLOT_SWITCH_DELAY)
+				const delay = SLOT_SWITCH_DELAY
+				dispatch({
+					type: 'SET_RESERVATION_COOLDOWN',
+					nextAttemptAt: new Date(Date.now() + delay),
+					durationMs: delay
+				})
+				await sleep(delay)
+				dispatch({
+					type: 'SET_RESERVATION_COOLDOWN',
+					nextAttemptAt: undefined,
+					durationMs: undefined
+				})
 				return false
 			}
 
 			// Other errors - retry same slot after delay
 			logEvent(
-				`[RESERVATION] Error: ${error instanceof Error ? error.message : String(error)}`,
+				`Booking failed: ${error instanceof Error ? error.message : String(error)}. Retrying...`,
 				'error'
 			)
-			await sleep(RETRY_DELAY)
+			const delay = RETRY_DELAY
+			dispatch({
+				type: 'SET_RESERVATION_COOLDOWN',
+				nextAttemptAt: new Date(Date.now() + delay),
+				durationMs: delay
+			})
+			await sleep(delay)
+			dispatch({
+				type: 'SET_RESERVATION_COOLDOWN',
+				nextAttemptAt: undefined,
+				durationMs: undefined
+			})
 			return false
 		}
 	}, [client, dispatch, logEvent, onSuccess, stop])
@@ -195,7 +216,18 @@ export function useReservation(options: UseReservationOptions): UseReservationRe
 
 			// Wait for slots to be available
 			if (currentState.search.slots.length === 0) {
-				await sleep(100)
+				const delay = 100
+				dispatch({
+					type: 'SET_RESERVATION_COOLDOWN',
+					nextAttemptAt: new Date(Date.now() + delay),
+					durationMs: delay
+				})
+				await sleep(delay)
+				dispatch({
+					type: 'SET_RESERVATION_COOLDOWN',
+					nextAttemptAt: undefined,
+					durationMs: undefined
+				})
 				continue
 			}
 
@@ -208,11 +240,22 @@ export function useReservation(options: UseReservationOptions): UseReservationRe
 			}
 
 			// Small delay before next attempt
-			await sleep(100)
+			const delay = 100
+			dispatch({
+				type: 'SET_RESERVATION_COOLDOWN',
+				nextAttemptAt: new Date(Date.now() + delay),
+				durationMs: delay
+			})
+			await sleep(delay)
+			dispatch({
+				type: 'SET_RESERVATION_COOLDOWN',
+				nextAttemptAt: undefined,
+				durationMs: undefined
+			})
 		}
 
 		isRunningRef.current = false
-	}, [attemptReservation, stop])
+	}, [attemptReservation, dispatch, stop])
 
 	// Start reservation when enabled and we have slots
 	useEffect(() => {

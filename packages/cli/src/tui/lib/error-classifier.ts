@@ -130,6 +130,9 @@ export function classifyError(error: unknown): ErrorType {
 
 	// CAPTCHA errors
 	if (message.includes('captcha')) {
+		if (message.includes('403')) {
+			return 'rate_limit_soft'
+		}
 		return 'captcha'
 	}
 
@@ -145,6 +148,9 @@ export function classifyError(error: unknown): ErrorType {
 
 	// Generic HTTP errors
 	if (message.includes('http') || message.includes('status')) {
+		if (message.includes('403')) {
+			return 'rate_limit_soft'
+		}
 		return 'api'
 	}
 

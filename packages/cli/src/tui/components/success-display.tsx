@@ -9,6 +9,7 @@ import type {
 	CreateReservationResult
 } from '../../lib/e-konsulat.gov.pl/index.ts'
 
+import { Badge, StatusMessage } from '@inkjs/ui'
 import { Box, Text } from 'ink'
 import { useEffect, useRef, useState } from 'react'
 
@@ -24,18 +25,6 @@ export interface SuccessDisplayProps {
 	checkSlotsResult: CheckSlotsResult
 	consulateDetails: ConsulateDetails
 }
-
-const Divider = ({ color, dimColor }: { color?: string; dimColor?: boolean }) => (
-	<Box
-		borderStyle='single'
-		borderTop={true}
-		borderBottom={false}
-		borderLeft={false}
-		borderRight={false}
-		borderColor={color}
-		dimColor={dimColor}
-	/>
-)
 
 export function SuccessDisplay({
 	result,
@@ -101,95 +90,148 @@ export function SuccessDisplay({
 	return (
 		<Box
 			flexDirection='column'
+			padding={1}
 			gap={1}
 		>
 			{/* Success Header */}
-			<Box>
-				<Text
-					color='green'
-					bold
-				>
-					RESERVATION SUCCESSFUL!
-				</Text>
-			</Box>
+			<StatusMessage variant='success'>RESERVATION SUCCESSFUL!</StatusMessage>
 
-			<Divider color='green' />
-
-			{/* Ticket Info */}
-			<Box flexDirection='column'>
-				<Text>
-					Ticket:{' '}
-					<Text
-						color='cyan'
-						bold
-					>
-						{result.ticket.substring(0, 20)}...
-					</Text>
-				</Text>
-				<Text>
-					Date:{' '}
-					<Text
-						color='cyan'
-						bold
-					>
-						{ticketDate}
-					</Text>{' '}
-					Time: <Text color='cyan'>{ticketTime || 'TBD'}</Text>
-				</Text>
-				<Text>
-					People: <Text color='cyan'>{result.tickets.length}</Text>
-				</Text>
-			</Box>
-
-			<Divider color='green' />
-
-			{/* Step 1: URL */}
-			<Box flexDirection='column'>
-				<Text bold>1. Open in browser:</Text>
-				<Text color='blue'>{formUrl}</Text>
-			</Box>
-
-			{/* Step 2: Console Script */}
+			{/* Ticket Info Section */}
 			<Box
 				flexDirection='column'
-				marginTop={1}
+				borderStyle='round'
+				borderColor='green'
+				paddingX={1}
 			>
-				<Box>
-					<Text bold>2. Paste in browser console (F12) </Text>
-					{copied && <Text color='green'>- COPIED TO CLIPBOARD</Text>}
-				</Box>
-				<Divider dimColor />
+				<Text
+					bold
+					color='green'
+				>
+					TICKET INFO
+				</Text>
 				<Box
 					flexDirection='column'
-					paddingLeft={1}
+					marginTop={1}
 				>
-					{consoleScript
-						.split('\n')
-						.slice(0, 6)
-						.map((line, i) => (
+					<Box gap={1}>
+						<Text dimColor>Ticket ID:</Text>
+						<Badge color='green'>{result.ticket.substring(0, 12)}...</Badge>
+					</Box>
+					<Box
+						gap={2}
+						marginTop={1}
+					>
+						<Box gap={1}>
+							<Text dimColor>Date:</Text>
 							<Text
-								key={`line-${i}-${line.slice(0, 20)}`}
-								dimColor
+								color='cyan'
+								bold
 							>
-								{line}
+								{ticketDate}
 							</Text>
-						))}
-					{consoleScript.split('\n').length > 6 && <Text dimColor>...</Text>}
+						</Box>
+						<Box gap={1}>
+							<Text dimColor>Time:</Text>
+							<Text
+								color='cyan'
+								bold
+							>
+								{ticketTime || 'TBD'}
+							</Text>
+						</Box>
+						<Box gap={1}>
+							<Text dimColor>People:</Text>
+							<Text
+								color='cyan'
+								bold
+							>
+								{result.tickets.length}
+							</Text>
+						</Box>
+					</Box>
 				</Box>
-				<Divider dimColor />
 			</Box>
 
-			{/* Step 3 */}
-			<Box marginTop={1}>
-				<Text bold>3. Fill out the form after page reloads</Text>
-			</Box>
+			{/* Instructions Section */}
+			<Box
+				flexDirection='column'
+				borderStyle='round'
+				borderColor='blue'
+				paddingX={1}
+			>
+				<Text
+					bold
+					color='blue'
+				>
+					INSTRUCTIONS
+				</Text>
 
-			<Divider color='green' />
+				{/* Step 1: URL */}
+				<Box
+					flexDirection='column'
+					marginTop={1}
+				>
+					<Text bold>1. Open in browser:</Text>
+					<Text
+						color='blue'
+						wrap='truncate'
+					>
+						{formUrl}
+					</Text>
+				</Box>
+
+				{/* Step 2: Console Script */}
+				<Box
+					flexDirection='column'
+					marginTop={1}
+				>
+					<Box justifyContent='space-between'>
+						<Text bold>2. Paste in browser console (F12) </Text>
+						{copied && <Badge color='green'>COPIED</Badge>}
+					</Box>
+					<Box
+						flexDirection='column'
+						paddingX={1}
+						paddingY={1}
+						borderStyle='single'
+						borderColor='gray'
+						marginTop={1}
+					>
+						{consoleScript
+							.split('\n')
+							.slice(0, 4)
+							.map((line, i) => (
+								<Text
+									key={`line-${i}-${line.slice(0, 20)}`}
+									dimColor
+								>
+									{line}
+								</Text>
+							))}
+						{consoleScript.split('\n').length > 4 && <Text dimColor>...</Text>}
+					</Box>
+				</Box>
+
+				{/* Step 3 */}
+				<Box
+					marginTop={1}
+					marginBottom={1}
+				>
+					<Text bold>3. Fill out the form after page reloads</Text>
+				</Box>
+			</Box>
 
 			{/* Footer */}
-			{savedPath && <Text dimColor>Saved: {savedPath}</Text>}
-			{error && <Text color='red'>{error}</Text>}
-			<Text dimColor>Press Ctrl+C to exit</Text>
+			<Box
+				flexDirection='column'
+				gap={0}
+			>
+				{savedPath && <StatusMessage variant='info'>Data saved to: {savedPath}</StatusMessage>}
+				{error && <StatusMessage variant='error'>{error}</StatusMessage>}
+				<Box marginTop={1}>
+					<Text dimColor>Press Ctrl+C to exit</Text>
+				</Box>
+			</Box>
 		</Box>
 	)
 }

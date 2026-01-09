@@ -11,10 +11,13 @@ import type {
 } from '../hooks/use-app-state.tsx'
 import type { ErrorLog, ErrorType } from '../lib/error-classifier.ts'
 
+import { Badge, ProgressBar } from '@inkjs/ui'
 import { Box, Text } from 'ink'
 import { useEffect, useState } from 'react'
 
 import { getErrorTypeDescription, summarizeErrors } from '../lib/error-classifier.ts'
+import type { ErrorLog, ErrorType } from '../lib/error-classifier.ts'
+import { ErrorWindow } from './error-window.tsx'
 
 export interface StatsDisplayProps {
 	phase: AppPhase
@@ -53,7 +56,7 @@ function formatErrorCounts(errors: ErrorLog[]): string {
 }
 
 function formatMs(ms: number | undefined): string {
-	if (!ms && ms !== 0) {
+	if (ms === undefined) {
 		return 'n/a'
 	}
 	if (ms < 1000) {
@@ -73,7 +76,7 @@ export function StatsDisplay({
 	useEffect(() => {
 		const interval = setInterval(() => {
 			setCurrentTime(new Date())
-		}, 1000)
+		}, 50)
 
 		return () => {
 			clearInterval(interval)
@@ -85,7 +88,6 @@ export function StatsDisplay({
 		: '0s'
 
 	const totalRequests = search.attempts + reservation.attempts
-	const totalErrors = search.errors.length + reservation.errors.length
 	const totalSlots = search.slots.length
 
 	const captchaSuccesses = stats.captchaSuccesses
@@ -96,62 +98,147 @@ export function StatsDisplay({
 	const averageSolve =
 		captchaSuccesses > 0 ? stats.captchaTotalDurationMs / captchaSuccesses : undefined
 
-	const statusColor = phase === 'success' ? 'green' : phase === 'booking' ? 'magenta' : 'cyan'
-	const statusLabel =
-		phase === 'booking'
-			? 'Booking'
-			: phase === 'searching'
-				? 'Searching'
-				: phase === 'success'
-					? 'Success'
-					: 'Waiting'
+	const getPhaseBadgeProps = (
+		phase: AppPhase
+	): { color: 'green' | 'magenta' | 'cyan' | 'blue'; label: string } => {
+		switch (phase) {
+			case 'success':
+				return { color: 'green', label: 'SUCCESS' }
+			case 'booking':
+				return { color: 'magenta', label: 'BOOKING' }
+			case 'searching':
+				return { color: 'cyan', label: 'SEARCHING' }
+			default:
+				return { color: 'blue', label: 'WAITING' }
+		}
+	}
+
+	const phaseBadge = getPhaseBadgeProps(phase)
+
+	const searchCooldownLeft =
+		search.nextAttemptAt && search.nextAttemptAt > currentTime
+			? Math.max(0, search.nextAttemptAt.getTime() - currentTime.getTime())
+			: 0
+
+	const reservationCooldownLeft =
+		reservation.nextAttemptAt && reservation.nextAttemptAt > currentTime
+			? Math.max(0, reservation.nextAttemptAt.getTime() - currentTime.getTime())
+			: 0
+
+	const activeCooldownLeft = Math.max(searchCooldownLeft, reservationCooldownLeft)
+	const activeCooldownDuration =
+		activeCooldownLeft > 0
+			? (searchCooldownLeft > reservationCooldownLeft
+					? search.cooldownDurationMs
+					: reservation.cooldownDurationMs) || 0
+			: 0
+
+	const cooldownProgress =
+		activeCooldownDuration > 0 ? (activeCooldownLeft / activeCooldownDuration) * 100 : 0
 
 	return (
 		<Box
-			flexDirection='column'
+			flexDirection='row'
 			gap={1}
+			flexWrap='wrap'
 		>
-			<Box gap={3}>
-				<Text>
-					<Text dimColor>Status:</Text> <Text color={statusColor}>{statusLabel}</Text>
-				</Text>
-				<Text>
-					<Text dimColor>Time:</Text> <Text color='cyan'>{runningTime}</Text>
-				</Text>
-				<Text>
-					<Text dimColor>Requests:</Text> <Text color='cyan'>{totalRequests}</Text>
-				</Text>
-				<Text>
-					<Text dimColor>Slots seen:</Text>{' '}
-					<Text color={totalSlots > 0 ? 'green' : 'yellow'}>{totalSlots}</Text>
-				</Text>
-				<Text>
-					<Text dimColor>Errors:</Text>{' '}
-					<Text color={totalErrors > 0 ? 'yellow' : 'green'}>{totalErrors}</Text>
-				</Text>
+			<Box
+				flexDirection='column'
+				borderStyle='round'
+				borderColor='cyan'
+				paddingX={1}
+				minWidth={30}
+				// flexShrink={0}
+				// flexBasis={1}
+				flexBasis={0}
+				flexGrow={1}
+				flexShrink={1}
+			>
+				<Box
+					justifyContent='space-between'
+					alignItems='center'
+				>
+					<Text bold>STATUS</Text>
+					<Badge color={phaseBadge.color}>{phaseBadge.label}</Badge>
+				</Box>
+				<Box
+					flexDirection='column'
+					marginTop={1}
+				>
+					<Box justifyContent='space-between'>
+						<Text dimColor>Running Time:</Text>
+						<Text color='cyan'>{runningTime}</Text>
+					</Box>
+					<Box justifyContent='space-between'>
+						<Text dimColor>Total Requests:</Text>
+						<Text color='cyan'>{totalRequests}</Text>
+					</Box>
+					<Box justifyContent='space-between'>
+						<Text dimColor>Slots Found:</Text>
+						<Text color={totalSlots > 0 ? 'green' : 'yellow'}>{totalSlots}</Text>
+					</Box>
+
+					<Box
+						flexDirection='column'
+						marginTop={1}
+						gap={0}
+					>
+						<Box justifyContent='space-between'>
+							<Text dimColor>Cooldown:</Text>
+							{activeCooldownLeft > 0 ? (
+								<Text color='yellow'>{(activeCooldownLeft / 1000).toFixed(1)}s</Text>
+							) : (
+								<Text color='grey'>N/A</Text>
+							)}
+						</Box>
+						<ProgressBar value={cooldownProgress} />
+					</Box>
+				</Box>
 			</Box>
-			<Box gap={3}>
-				<Text>
-					<Text dimColor>CAPTCHA:</Text>{' '}
-					<Text color='cyan'>
-						{captchaSuccesses}/{captchaAttempts}
-					</Text>{' '}
-					<Text dimColor>(fail {captchaFailures})</Text>
-				</Text>
-				<Text>
-					<Text dimColor>Success rate:</Text> <Text color='cyan'>{captchaRate}%</Text>
-				</Text>
-				<Text>
-					<Text dimColor>Avg solve:</Text> <Text color='cyan'>{formatMs(averageSolve)}</Text>
-				</Text>
-				<Text>
-					<Text dimColor>Last solve:</Text>{' '}
-					<Text color='cyan'>{formatMs(stats.lastCaptchaDurationMs)}</Text>
-				</Text>
+
+			<Box
+				flexDirection='column'
+				borderStyle='round'
+				borderColor='magenta'
+				paddingX={1}
+				minWidth={30}
+				flexBasis={0}
+				flexGrow={1}
+				flexShrink={1}
+			>
+				<Text bold>CAPTCHA STATS</Text>
+				<Box
+					flexDirection='column'
+					marginTop={1}
+				>
+					<Box justifyContent='space-between'>
+						<Text dimColor>Attempts:</Text>
+						<Text color='cyan'>{captchaAttempts}</Text>
+					</Box>
+					<Box justifyContent='space-between'>
+						<Text dimColor>Solved:</Text>
+						<Text color='green'>{captchaSuccesses}</Text>
+					</Box>
+					<Box justifyContent='space-between'>
+						<Text dimColor>Success Rate:</Text>
+						<Text color='cyan'>{captchaRate}%</Text>
+					</Box>
+					<Box justifyContent='space-between'>
+						<Text dimColor>Avg Solve:</Text>
+						<Text color='cyan'>{formatMs(averageSolve)}</Text>
+					</Box>
+					<Box justifyContent='space-between'>
+						<Text dimColor>Last Solve:</Text>
+						<Text color='cyan'>{formatMs(stats.lastCaptchaDurationMs)}</Text>
+					</Box>
+				</Box>
 			</Box>
-			{totalErrors > 0 && (
-				<Text dimColor>Types: {formatErrorCounts([...search.errors, ...reservation.errors])}</Text>
-			)}
+
+			<ErrorWindow
+				errors={[...search.errors, ...reservation.errors]}
+				maxLines={3}
+				title='Error Stats'
+			/>
 		</Box>
 	)
 }

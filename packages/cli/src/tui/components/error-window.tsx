@@ -3,11 +3,12 @@
  * Shows last N errors with type, name, description, message, and time
  */
 
-import type { ErrorLog } from '../lib/error-classifier.ts'
+import type { ErrorLog, ErrorType } from '../lib/error-classifier.ts'
 
+import { Badge } from '@inkjs/ui'
 import { Box, Text } from 'ink'
 
-import { getErrorTypeDescription } from '../lib/error-classifier.ts'
+import { getErrorTypeDescription, summarizeErrors } from '../lib/error-classifier.ts'
 
 export interface ErrorWindowProps {
 	errors: ErrorLog[]
@@ -31,46 +32,90 @@ function truncateMessage(message: string, maxLength: number): string {
 	return `${message.slice(0, maxLength - 3)}...`
 }
 
-export function ErrorWindow({ errors, maxLines = 3, title }: ErrorWindowProps): React.ReactNode {
-	// Get last N errors (most recent first)
-	const recentErrors = [...errors].reverse().slice(0, maxLines)
+function getErrorBadgeColor(
+	type: ErrorType
+): 'red' | 'yellow' | 'magenta' | 'cyan' | 'blue' | 'gray' {
+	switch (type) {
+		case 'rate_limit_hard':
+			return 'red'
+		case 'rate_limit_soft':
+			return 'yellow'
+		case 'captcha':
+			return 'magenta'
+		case 'slot_unavailable':
+			return 'cyan'
+		case 'network':
+		case 'timeout':
+			return 'blue'
+		default:
+			return 'gray'
+	}
+}
+
+export function ErrorWindow({
+	errors,
+	title
+}: {
+	errors: ErrorLog[]
+	title: string
+}): React.ReactNode {
+	const summary = summarizeErrors(errors)
+	const activeErrorTypes = Object.entries(summary)
+		.filter(([_, count]) => count > 0)
+		.sort((a, b) => b[1] - a[1]) // Sort by count descending
 
 	return (
 		<Box
 			flexDirection='column'
 			borderStyle='round'
-			borderColor='gray'
+			borderColor='red'
 			paddingX={1}
-			minHeight={maxLines + 2}
+			minWidth={30}
+			flexBasis={0}
+			flexGrow={1}
+			flexShrink={1}
 		>
 			<Text
 				bold
-				color='yellow'
+				color='red'
 			>
-				{title}
+				{title.toUpperCase()}
 			</Text>
-			{recentErrors.length === 0 ? (
-				<Text dimColor>No errors</Text>
-			) : (
-				recentErrors.map((error, index) => {
-					const typeDesc = getErrorTypeDescription(error.type)
-					const time = formatErrorTime(error.timestamp)
-					const message = truncateMessage(error.message, 40)
 
-					return (
-						<Text
-							key={`${error.timestamp.getTime()}-${index}`}
-							wrap='truncate'
-						>
-							<Text color='red'>{typeDesc}</Text>
-							<Text dimColor> • </Text>
-							<Text>{message}</Text>
-							<Text dimColor> • </Text>
-							<Text dimColor>{time}</Text>
-						</Text>
-					)
-				})
-			)}
+			<Box
+				flexDirection='column'
+				marginTop={1}
+				gap={0}
+			>
+				{activeErrorTypes.length === 0 ? (
+					<Text
+						dimColor
+						italic
+					>
+						Everything is running smoothly.
+					</Text>
+				) : (
+					<Box
+						flexDirection='column'
+						gap={0}
+					>
+						{activeErrorTypes.map(([type, count]) => {
+							const errorType = type as ErrorType
+							const color = getErrorBadgeColor(errorType)
+							return (
+								<Box
+									key={type}
+									justifyContent='space-between'
+									alignItems='center'
+								>
+									<Badge color={color}>{getErrorTypeDescription(errorType).toUpperCase()}</Badge>
+									<Text bold>{count}</Text>
+								</Box>
+							)
+						})}
+					</Box>
+				)}
+			</Box>
 		</Box>
 	)
 }
