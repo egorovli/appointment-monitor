@@ -1,22 +1,25 @@
 /**
  * Slot monitoring display component
- * Shows real-time search and booking progress
+ * Shows real-time search and booking progress with stats, errors, and logs
  */
 
 import type {
 	AppParams,
+	LogEntry,
 	ReservationState,
 	SearchState,
 	StatsState
-} from '../hooks/use-app-state.ts'
-import type { ErrorType } from '../lib/error-classifier.ts'
+} from '../hooks/use-app-state.tsx'
+import type { ErrorLog, ErrorType } from '../lib/error-classifier.ts'
 
 import { Spinner } from '@inkjs/ui'
 import { Box, Text } from 'ink'
+import { format, isValid, parseISO } from 'date-fns'
 
 import { getErrorTypeDescription, summarizeErrors } from '../lib/error-classifier.ts'
 
 import { ErrorWindow } from './error-window.tsx'
+import { LogWindow } from './log-window.tsx'
 import { StatsDisplay } from './stats-display.tsx'
 
 export interface SlotMonitorProps {
@@ -25,6 +28,7 @@ export interface SlotMonitorProps {
 	reservation: ReservationState
 	stats: StatsState
 	phase: 'searching' | 'booking'
+	logs: LogEntry[]
 }
 
 function formatTime(date: Date | undefined): string {
@@ -34,14 +38,19 @@ function formatTime(date: Date | undefined): string {
 	return date.toLocaleTimeString('en-US', { hour12: false })
 }
 
-function formatErrorSummary(errors: { type: ErrorType; count: number }[]): string {
-	if (errors.length === 0) {
-		return 'None'
+function formatDateLabel(date: string): string {
+	const parsed = parseISO(date)
+	if (isValid(parsed)) {
+		return format(parsed, 'EEE, MMM dd')
 	}
-	return errors
-		.filter(e => e.count > 0)
-		.map(e => `${e.count} ${getErrorTypeDescription(e.type).toLowerCase()}`)
-		.join(', ')
+	return date
+}
+
+function formatErrorBreakdown(errors: ErrorLog[]): string[] {
+	const summary = summarizeErrors(errors)
+	return Object.entries(summary)
+		.filter(([_, count]) => count > 0)
+		.map(([type, count]) => `${count} ${getErrorTypeDescription(type as ErrorType).toLowerCase()}`)
 }
 
 export function SlotMonitor({
@@ -49,31 +58,37 @@ export function SlotMonitor({
 	search,
 	reservation,
 	stats,
-	phase
+	phase,
+	logs
 }: SlotMonitorProps): React.ReactNode {
-	const searchErrorSummary = summarizeErrors(search.errors)
-	const reservationErrorSummary = summarizeErrors(reservation.errors)
+	const searchErrorBreakdown = formatErrorBreakdown(search.errors)
+	const reservationErrorBreakdown = formatErrorBreakdown(reservation.errors)
+	const allErrors: ErrorLog[] = [...search.errors, ...reservation.errors]
 
-	const searchErrors = Object.entries(searchErrorSummary)
-		.filter(([_, count]) => count > 0)
-		.map(([type, count]) => ({ type: type as ErrorType, count }))
-
-	const reservationErrors = Object.entries(reservationErrorSummary)
-		.filter(([_, count]) => count > 0)
-		.map(([type, count]) => ({ type: type as ErrorType, count }))
-
-	// Get available slot dates
 	const slotDates = search.slots
 		.map(s => s.date)
-		.filter((d): d is string => !!d)
-		.slice(0, 5) // Show first 5
+		.filter((d): d is string => Boolean(d))
+		.map(formatDateLabel)
+
+	const visibleDates = slotDates.slice(0, 3)
+	const remainingDates = Math.max(slotDates.length - visibleDates.length, 0)
+
+	const hasReservationSection =
+		reservation.isRunning ||
+		reservation.attempts > 0 ||
+		reservation.errors.length > 0 ||
+		search.slots.length > 0
+
+	const showErrors = allErrors.length > 0
+	const showLogs = logs.length > 0
+
+	const divider = '-'.repeat(60)
 
 	return (
 		<Box
 			flexDirection='column'
 			gap={1}
 		>
-			{/* Header */}
 			<Box flexDirection='column'>
 				<Text bold>Monitoring: {params.consulateName}</Text>
 				<Text dimColor>
@@ -82,23 +97,22 @@ export function SlotMonitor({
 				<Text dimColor>People: {params.amount}</Text>
 			</Box>
 
-			{/* Stats */}
 			<StatsDisplay
+				phase={phase}
 				stats={stats}
-				searchErrors={search.errors}
-				reservationErrors={reservation.errors}
-				searchAttempts={search.attempts}
-				reservationAttempts={reservation.attempts}
+				search={search}
+				reservation={reservation}
 			/>
 
-			{/* Divider */}
-			<Text>{'─'.repeat(50)}</Text>
+			<Text>{divider}</Text>
 
-			{/* Slot Search Status */}
-			<Box flexDirection='column'>
-				<Box>
+			<Box
+				flexDirection='column'
+				gap={1}
+			>
+				<Box alignItems='center'>
 					<Text bold>SLOT SEARCH </Text>
-					{search.isRunning ? <Spinner /> : <Text color='yellow'>Stopped</Text>}
+					{search.isRunning ? <Spinner /> : <Text color='yellow'>Paused</Text>}
 				</Box>
 				<Box gap={2}>
 					<Text>
@@ -112,13 +126,14 @@ export function SlotMonitor({
 						<Text color={search.slots.length > 0 ? 'green' : 'yellow'}>{search.slots.length}</Text>
 					</Text>
 				</Box>
-				{searchErrors.length > 0 && (
-					<Text dimColor>Errors: {formatErrorSummary(searchErrors)}</Text>
+				{searchErrorBreakdown.length > 0 && (
+					<Text dimColor>Errors: {searchErrorBreakdown.join(' | ')}</Text>
 				)}
-				{slotDates.length > 0 && (
+				{visibleDates.length > 0 && (
 					<Box
 						flexDirection='column'
 						marginTop={1}
+						gap={0}
 					>
 						<Text
 							color='green'
@@ -126,80 +141,78 @@ export function SlotMonitor({
 						>
 							Available dates:
 						</Text>
-						{slotDates.map(date => (
+						{visibleDates.map(date => (
 							<Text
 								key={date}
 								color='green'
 							>
-								{' '}
-								{date}
+								- {date}
 							</Text>
 						))}
-						{search.slots.length > 5 && (
-							<Text dimColor> ... and {search.slots.length - 5} more</Text>
+						{remainingDates > 0 && <Text dimColor>... and {remainingDates} more</Text>}
+					</Box>
+				)}
+			</Box>
+
+			{hasReservationSection && (
+				<>
+					<Text>{divider}</Text>
+					<Box
+						flexDirection='column'
+						gap={1}
+					>
+						<Box alignItems='center'>
+							<Text bold>RESERVATION </Text>
+							{reservation.isRunning && <Spinner />}
+							{!reservation.isRunning && search.slots.length === 0 && (
+								<Text color='yellow'>Waiting for slots...</Text>
+							)}
+							{!reservation.isRunning && search.slots.length > 0 && phase === 'searching' && (
+								<Text color='cyan'>Ready</Text>
+							)}
+							{reservation.result && <Text color='green'>Completed</Text>}
+						</Box>
+						<Box gap={2}>
+							<Text>
+								Attempts: <Text color='cyan'>{reservation.attempts}</Text>
+							</Text>
+							<Text>
+								Current slot:{' '}
+								<Text color='cyan'>
+									{search.slots.length === 0
+										? '--'
+										: `${reservation.currentSlotIndex + 1}/${search.slots.length}`}
+								</Text>
+							</Text>
+						</Box>
+						{reservationErrorBreakdown.length > 0 && (
+							<Text dimColor>Errors: {reservationErrorBreakdown.join(' | ')}</Text>
 						)}
 					</Box>
-				)}
-			</Box>
+				</>
+			)}
 
-			{/* Divider */}
-			<Text>{'─'.repeat(50)}</Text>
-
-			{/* Reservation Status */}
-			<Box flexDirection='column'>
-				<Box>
-					<Text bold>RESERVATION </Text>
-					{!reservation.isRunning && search.slots.length === 0 && (
-						<Text color='yellow'>Waiting for slots...</Text>
-					)}
-					{reservation.isRunning && <Spinner />}
-					{!reservation.isRunning && search.slots.length > 0 && phase === 'searching' && (
-						<Text color='cyan'>Starting...</Text>
-					)}
-				</Box>
-				{reservation.isRunning && (
-					<Box gap={2}>
-						<Text>
-							Attempts: <Text color='cyan'>{reservation.attempts}</Text>
-						</Text>
-						<Text>
-							Current slot:{' '}
-							<Text color='cyan'>
-								{reservation.currentSlotIndex + 1}/{search.slots.length}
-							</Text>
-						</Text>
-					</Box>
-				)}
-				{reservationErrors.length > 0 && (
-					<Text dimColor>Errors: {formatErrorSummary(reservationErrors)}</Text>
-				)}
-			</Box>
-
-			{/* Divider */}
-			<Text>{'─'.repeat(50)}</Text>
-
-			{/* Error Windows */}
-			<Box
-				flexDirection='row'
-				gap={2}
-			>
-				<Box flexGrow={1}>
+			{showErrors && (
+				<>
+					<Text>{divider}</Text>
 					<ErrorWindow
-						errors={search.errors}
-						maxLines={3}
-						title='Search Errors'
+						errors={allErrors}
+						maxLines={5}
+						title='Recent errors'
 					/>
-				</Box>
-				<Box flexGrow={1}>
-					<ErrorWindow
-						errors={reservation.errors}
-						maxLines={3}
-						title='Reservation Errors'
-					/>
-				</Box>
-			</Box>
+				</>
+			)}
 
-			{/* Footer */}
+			{showLogs && (
+				<>
+					<Text>{divider}</Text>
+					<LogWindow
+						logs={logs}
+						maxLines={10}
+					/>
+				</>
+			)}
+
 			<Text dimColor>Press Ctrl+C to stop</Text>
 		</Box>
 	)

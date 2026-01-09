@@ -152,6 +152,7 @@ function MonitoringView({ client }: MonitoringViewProps): React.ReactNode {
 			reservation={state.reservation}
 			stats={state.stats}
 			phase={phase}
+			logs={state.logs}
 		/>
 	)
 }

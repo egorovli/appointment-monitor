@@ -1,23 +1,26 @@
 /**
  * Stats display component
- * Shows minimal stats: requests, errors, running time, captcha stats
+ * Shows overall status, timing, and captcha performance
  */
 
-import type { StatsState } from '../hooks/use-app-state.ts'
-import type { ErrorType } from '../lib/error-classifier.ts'
+import type {
+	AppPhase,
+	ReservationState,
+	SearchState,
+	StatsState
+} from '../hooks/use-app-state.tsx'
+import type { ErrorLog, ErrorType } from '../lib/error-classifier.ts'
 
 import { Box, Text } from 'ink'
 import { useEffect, useState } from 'react'
 
 import { getErrorTypeDescription, summarizeErrors } from '../lib/error-classifier.ts'
-import type { ErrorLog } from '../lib/error-classifier.ts'
 
 export interface StatsDisplayProps {
+	phase: AppPhase
 	stats: StatsState
-	searchErrors: ErrorLog[]
-	reservationErrors: ErrorLog[]
-	searchAttempts: number
-	reservationAttempts: number
+	search: SearchState
+	reservation: ReservationState
 }
 
 function formatDuration(ms: number): string {
@@ -49,12 +52,21 @@ function formatErrorCounts(errors: ErrorLog[]): string {
 	return counts.join(', ')
 }
 
+function formatMs(ms: number | undefined): string {
+	if (!ms && ms !== 0) {
+		return 'n/a'
+	}
+	if (ms < 1000) {
+		return `${ms}ms`
+	}
+	return `${(ms / 1000).toFixed(2)}s`
+}
+
 export function StatsDisplay({
+	phase,
 	stats,
-	searchErrors,
-	reservationErrors,
-	searchAttempts,
-	reservationAttempts
+	search,
+	reservation
 }: StatsDisplayProps): React.ReactNode {
 	const [currentTime, setCurrentTime] = useState(new Date())
 
@@ -72,48 +84,74 @@ export function StatsDisplay({
 		? formatDuration(currentTime.getTime() - stats.startTime.getTime())
 		: '0s'
 
-	const totalRequests = searchAttempts + reservationAttempts
-	const totalErrors = searchErrors.length + reservationErrors.length
-	const captchaSuccesses = stats.captchaAttempts - stats.captchaFailures
+	const totalRequests = search.attempts + reservation.attempts
+	const totalErrors = search.errors.length + reservation.errors.length
+	const totalSlots = search.slots.length
+
+	const captchaSuccesses = stats.captchaSuccesses
+	const captchaAttempts = stats.captchaAttempts
+	const captchaFailures = stats.captchaFailures
 	const captchaRate =
-		stats.captchaAttempts > 0
-			? ((captchaSuccesses / stats.captchaAttempts) * 100).toFixed(1)
-			: '0.0'
+		captchaAttempts > 0 ? ((captchaSuccesses / captchaAttempts) * 100).toFixed(1) : '0.0'
+	const averageSolve =
+		captchaSuccesses > 0 ? stats.captchaTotalDurationMs / captchaSuccesses : undefined
+
+	const statusColor = phase === 'success' ? 'green' : phase === 'booking' ? 'magenta' : 'cyan'
+	const statusLabel =
+		phase === 'booking'
+			? 'Booking'
+			: phase === 'searching'
+				? 'Searching'
+				: phase === 'success'
+					? 'Success'
+					: 'Waiting'
 
 	return (
 		<Box
 			flexDirection='column'
-			gap={0}
+			gap={1}
 		>
 			<Box gap={3}>
+				<Text>
+					<Text dimColor>Status:</Text> <Text color={statusColor}>{statusLabel}</Text>
+				</Text>
+				<Text>
+					<Text dimColor>Time:</Text> <Text color='cyan'>{runningTime}</Text>
+				</Text>
 				<Text>
 					<Text dimColor>Requests:</Text> <Text color='cyan'>{totalRequests}</Text>
 				</Text>
 				<Text>
-					<Text dimColor>Errors:</Text>{' '}
-					<Text color={totalErrors > 0 ? 'yellow' : 'green'}>{totalErrors}</Text>
+					<Text dimColor>Slots seen:</Text>{' '}
+					<Text color={totalSlots > 0 ? 'green' : 'yellow'}>{totalSlots}</Text>
 				</Text>
 				<Text>
-					<Text dimColor>Time:</Text> <Text color='cyan'>{runningTime}</Text>
+					<Text dimColor>Errors:</Text>{' '}
+					<Text color={totalErrors > 0 ? 'yellow' : 'green'}>{totalErrors}</Text>
 				</Text>
 			</Box>
 			<Box gap={3}>
 				<Text>
 					<Text dimColor>CAPTCHA:</Text>{' '}
 					<Text color='cyan'>
-						{captchaSuccesses}/{stats.captchaAttempts}
-					</Text>
+						{captchaSuccesses}/{captchaAttempts}
+					</Text>{' '}
+					<Text dimColor>(fail {captchaFailures})</Text>
 				</Text>
 				<Text>
-					<Text dimColor>Rate:</Text> <Text color='cyan'>{captchaRate}%</Text>
+					<Text dimColor>Success rate:</Text> <Text color='cyan'>{captchaRate}%</Text>
 				</Text>
-				{totalErrors > 0 && (
-					<Text>
-						<Text dimColor>Types:</Text>{' '}
-						<Text dimColor>{formatErrorCounts([...searchErrors, ...reservationErrors])}</Text>
-					</Text>
-				)}
+				<Text>
+					<Text dimColor>Avg solve:</Text> <Text color='cyan'>{formatMs(averageSolve)}</Text>
+				</Text>
+				<Text>
+					<Text dimColor>Last solve:</Text>{' '}
+					<Text color='cyan'>{formatMs(stats.lastCaptchaDurationMs)}</Text>
+				</Text>
 			</Box>
+			{totalErrors > 0 && (
+				<Text dimColor>Types: {formatErrorCounts([...search.errors, ...reservation.errors])}</Text>
+			)}
 		</Box>
 	)
 }

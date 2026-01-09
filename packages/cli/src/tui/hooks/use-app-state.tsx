@@ -18,6 +18,15 @@ import { createContext, useContext, useReducer } from 'react'
 // Application phases
 export type AppPhase = 'params' | 'searching' | 'booking' | 'success'
 
+export type LogLevel = 'info' | 'warn' | 'error'
+
+export interface LogEntry {
+	timestamp: Date
+	level: LogLevel
+	message: string
+	context?: Record<string, unknown>
+}
+
 // User-selected parameters
 export interface AppParams {
 	countryId: string
@@ -57,6 +66,9 @@ export interface StatsState {
 	startTime: Date | undefined
 	captchaAttempts: number
 	captchaFailures: number
+	captchaSuccesses: number
+	captchaTotalDurationMs: number
+	lastCaptchaDurationMs: number | undefined
 }
 
 // Complete application state
@@ -66,6 +78,7 @@ export interface AppState {
 	search: SearchState
 	reservation: ReservationState
 	stats: StatsState
+	logs: LogEntry[]
 }
 
 // Action types
@@ -82,6 +95,8 @@ export type AppAction =
 	| { type: 'RESERVATION_SUCCESS'; result: CreateReservationResult }
 	| { type: 'INCREMENT_CAPTCHA_ATTEMPT' }
 	| { type: 'INCREMENT_CAPTCHA_FAILURE' }
+	| { type: 'LOG_CAPTCHA_SUCCESS'; durationMs: number }
+	| { type: 'APPEND_LOG'; entry: LogEntry }
 	| { type: 'STOP_ALL' }
 	| { type: 'RESET' }
 
@@ -108,7 +123,10 @@ const initialReservationState: ReservationState = {
 const initialStatsState: StatsState = {
 	startTime: undefined,
 	captchaAttempts: 0,
-	captchaFailures: 0
+	captchaFailures: 0,
+	captchaSuccesses: 0,
+	captchaTotalDurationMs: 0,
+	lastCaptchaDurationMs: undefined
 }
 
 const initialState: AppState = {
@@ -116,7 +134,8 @@ const initialState: AppState = {
 	params: undefined,
 	search: initialSearchState,
 	reservation: initialReservationState,
-	stats: initialStatsState
+	stats: initialStatsState,
+	logs: []
 }
 
 function countAvailableSlots(slots: Slot[]): number {
@@ -273,6 +292,17 @@ function appReducer(state: AppState, action: AppAction): AppState {
 				}
 			}
 
+		case 'LOG_CAPTCHA_SUCCESS':
+			return {
+				...state,
+				stats: {
+					...state.stats,
+					captchaSuccesses: state.stats.captchaSuccesses + 1,
+					captchaTotalDurationMs: state.stats.captchaTotalDurationMs + action.durationMs,
+					lastCaptchaDurationMs: action.durationMs
+				}
+			}
+
 		case 'RESERVATION_SUCCESS':
 			// CRITICAL: Ensure all loops stop immediately
 			return {
@@ -288,6 +318,15 @@ function appReducer(state: AppState, action: AppAction): AppState {
 					result: action.result
 				}
 			}
+
+		case 'APPEND_LOG': {
+			const logs = [...state.logs, action.entry].slice(-200)
+
+			return {
+				...state,
+				logs
+			}
+		}
 
 		case 'STOP_ALL':
 			return {

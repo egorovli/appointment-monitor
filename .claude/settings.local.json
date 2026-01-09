@@ -6,6 +6,7 @@
       "mcp__serena__activate_project"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "context7",
     "playwright",
@@ -16,5 +17,6 @@
     "github",
     "perplexity"
   ],
-  "enableAllProjectMcpServers": true
+  "spinnerTipsEnabled": false,
+  "outputStyle": "default"
 }

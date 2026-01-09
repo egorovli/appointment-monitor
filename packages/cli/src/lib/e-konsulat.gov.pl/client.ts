@@ -1,3 +1,6 @@
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+
 import type { Solver } from '../captcha/solver.ts'
 
 interface CaptchaResponse {
@@ -261,8 +264,29 @@ export class Client implements AsyncDisposable {
 				proxy: Client.proxyUrl
 			})
 
+			let responseBody: string | undefined
 			if (!response.ok) {
-				throw new Error(`Failed to verify CAPTCHA: HTTP ${response.status} ${response.statusText}`)
+				try {
+					responseBody = await response.text()
+				} catch (bodyError) {
+					responseBody = `<<failed to read body: ${bodyError instanceof Error ? bodyError.message : String(bodyError)}>>`
+				}
+
+				let logPath: string | undefined
+				if (response.status === 403) {
+					logPath = this.logCaptchaFailure({
+						status: response.status,
+						statusText: response.statusText,
+						headers: Array.from(response.headers.entries()),
+						body: responseBody
+					})
+				}
+
+				throw new Error(
+					`Failed to verify CAPTCHA: HTTP ${response.status} ${response.statusText}${
+						logPath ? ` (logged at ${logPath})` : ''
+					}`
+				)
 			}
 
 			const data = (await response.json()) as CaptchaVerificationResponse
@@ -292,6 +316,39 @@ export class Client implements AsyncDisposable {
 		}
 
 		return result.token
+	}
+
+	private logCaptchaFailure(details: {
+		status: number
+		statusText: string
+		headers: [string, string][]
+		body?: string
+	}): string | undefined {
+		try {
+			const logDir = path.resolve(process.cwd(), 'logs')
+			fs.mkdirSync(logDir, { recursive: true })
+
+			const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+			const logPath = path.join(logDir, `captcha-verify-403-${timestamp}.log`)
+			const headerLines = details.headers.map(([key, value]) => `${key}: ${value}`).join('\n')
+			const body = (details.body ?? '<empty>').slice(0, 4000)
+
+			const content = [
+				`Status: ${details.status} ${details.statusText}`,
+				'Headers:',
+				headerLines,
+				'',
+				'Body:',
+				body
+			].join('\n')
+
+			fs.writeFileSync(logPath, content, 'utf8')
+			console.error(`[CAPTCHA] Logged HTTP 403 verification response to ${logPath}`)
+			return logPath
+		} catch (error) {
+			console.error('[CAPTCHA] Failed to log HTTP 403 verification response', error)
+			return undefined
+		}
 	}
 
 	async getCountries(input: GetCountriesInput = {}): Promise<Country[]> {

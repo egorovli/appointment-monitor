@@ -8,6 +8,7 @@ import type { EKonsulatClient, CreateReservationResult } from '../../lib/e-konsu
 import { useCallback, useEffect, useRef } from 'react'
 
 import { createErrorLog, isHardRateLimit, SlotUnavailableError } from '../lib/error-classifier.ts'
+import { notifyReservationSuccess } from '../lib/notifications.ts'
 import { useAppState } from './use-app-state.tsx'
 
 export interface UseReservationOptions {
@@ -34,6 +35,20 @@ export function useReservation(options: UseReservationOptions): UseReservationRe
 	const stateRef = useRef(state)
 	const isRunningRef = useRef(false)
 	const abortRef = useRef<AbortController | null>(null)
+
+	const logEvent = useCallback(
+		(message: string, level: 'info' | 'warn' | 'error' = 'info') => {
+			dispatch({
+				type: 'APPEND_LOG',
+				entry: {
+					timestamp: new Date(),
+					level,
+					message
+				}
+			})
+		},
+		[dispatch]
+	)
 
 	// Keep a ref of the latest state to avoid stale closures in long-running loops
 	useEffect(() => {
@@ -86,6 +101,9 @@ export function useReservation(options: UseReservationOptions): UseReservationRe
 
 		try {
 			dispatch({ type: 'INCREMENT_RESERVATION_ATTEMPT' })
+			logEvent(
+				`[RESERVATION] Attempt ${reservation.attempts + 1} on ${slot.date} (${slotIndex + 1}/${slots.length})`
+			)
 
 			const result = await client.createReservation({
 				date: slot.date,
@@ -98,6 +116,17 @@ export function useReservation(options: UseReservationOptions): UseReservationRe
 			// Success! (client throws if bilet is null, so if we get here it's valid)
 			// CRITICAL: Stop immediately before dispatching
 			stop()
+			logEvent(
+				`[RESERVATION] Success${slot.date ? ` for ${slot.date}` : ''}${
+					params ? ` @ ${params.consulateName}` : ''
+				}`,
+				'info'
+			)
+			notifyReservationSuccess({
+				date: slot.date,
+				locationName: params?.consulateName ?? params?.locationName,
+				ticket: result.ticket
+			})
 			dispatch({ type: 'RESERVATION_SUCCESS', result })
 
 			if (onSuccess) {
@@ -123,22 +152,28 @@ export function useReservation(options: UseReservationOptions): UseReservationRe
 			// Check for hard rate limit - stop completely
 			if (isHardRateLimit(error)) {
 				console.error('[RESERVATION] Hard rate limit detected - stopping')
+				logEvent('[RESERVATION] Hard rate limit detected - stopping', 'warn')
 				stop()
 				return false
 			}
 
 			// Slot unavailable - try next slot immediately
 			if (error instanceof SlotUnavailableError) {
+				logEvent(`[RESERVATION] Slot became unavailable (${slot.date})`, 'warn')
 				dispatch({ type: 'TRY_NEXT_SLOT' })
 				await sleep(SLOT_SWITCH_DELAY)
 				return false
 			}
 
 			// Other errors - retry same slot after delay
+			logEvent(
+				`[RESERVATION] Error: ${error instanceof Error ? error.message : String(error)}`,
+				'error'
+			)
 			await sleep(RETRY_DELAY)
 			return false
 		}
-	}, [client, dispatch, onSuccess, stop])
+	}, [client, dispatch, logEvent, onSuccess, stop])
 
 	const runReservationLoop = useCallback(async () => {
 		if (isRunningRef.current) {
@@ -187,11 +222,7 @@ export function useReservation(options: UseReservationOptions): UseReservationRe
 			return
 		}
 
-		if (
-			enabled &&
-			state.search.slots.length > 0 &&
-			!isRunningRef.current
-		) {
+		if (enabled && state.search.slots.length > 0 && !isRunningRef.current) {
 			// Fetch consulate details first if not already done
 			if (
 				!state.reservation.consulateDetails &&
@@ -205,11 +236,22 @@ export function useReservation(options: UseReservationOptions): UseReservationRe
 					})
 					.then(details => {
 						dispatch({ type: 'START_RESERVATION', consulateDetails: details })
+						if (state.params) {
+							logEvent(
+								`[RESERVATION] Starting (${state.params.consulateName} / ${state.params.serviceName})`
+							)
+						}
 						runReservationLoop()
 					})
 					.catch(error => {
 						const errorLog = createErrorLog(error, { context: 'getConsulateDetails' })
 						dispatch({ type: 'LOG_RESERVATION_ERROR', error: errorLog })
+						logEvent(
+							`[RESERVATION] Failed to load consulate details: ${
+								error instanceof Error ? error.message : String(error)
+							}`,
+							'error'
+						)
 					})
 			} else if (state.reservation.consulateDetails) {
 				runReservationLoop()
@@ -229,6 +271,7 @@ export function useReservation(options: UseReservationOptions): UseReservationRe
 		client,
 		dispatch,
 		runReservationLoop,
+		logEvent,
 		stop
 	])
 
