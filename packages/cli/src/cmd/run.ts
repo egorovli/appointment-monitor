@@ -1,6 +1,6 @@
-import { Command } from 'commander'
-
 import * as path from 'node:path'
+
+import { Command } from 'commander'
 
 import * as captcha from '../lib/captcha/index.ts'
 import * as eKonsulat from '../lib/e-konsulat.gov.pl/index.ts'

@@ -11,7 +11,7 @@ import type {
 	StatsState
 } from '../hooks/use-app-state.tsx'
 
-import { ProgressBar, Spinner, StatusMessage } from '@inkjs/ui'
+import { ProgressBar, Spinner } from '@inkjs/ui'
 import { Box, Text } from 'ink'
 import { format, isValid, parseISO } from 'date-fns'
 
