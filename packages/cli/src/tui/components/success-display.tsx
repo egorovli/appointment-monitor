@@ -115,9 +115,8 @@ export function SuccessDisplay({
 			}
 		}
 
-		init()
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []) // Empty deps - only run once on mount
+		void init()
+	}, [consoleScript, result, checkSlotsResult, consulateDetails])
 
 	return (
 		<Box
