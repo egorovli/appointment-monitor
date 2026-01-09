@@ -138,6 +138,8 @@ export function SlotMonitor({
 					paddingX={1}
 					minWidth={30}
 					flexGrow={1}
+					flexBasis={0}
+					flexShrink={1}
 				>
 					<Box justifyContent='space-between'>
 						<Text bold>SLOT SEARCH</Text>
@@ -201,6 +203,19 @@ export function SlotMonitor({
 					</Box>
 				</Box>
 
+				{!showReservation && (
+					<Box
+						// flexDirection='column'
+						// borderStyle='round'
+						// borderColor='gray'
+						// paddingX={1}
+						// minWidth={30}
+						flexGrow={1}
+						flexBasis={0}
+						flexShrink={1}
+					/>
+				)}
+
 				{/* Reservation Section (Conditional) */}
 				{showReservation && (
 					<Box
@@ -210,6 +225,8 @@ export function SlotMonitor({
 						paddingX={1}
 						minWidth={30}
 						flexGrow={1}
+						flexBasis={0}
+						flexShrink={1}
 					>
 						<Box justifyContent='space-between'>
 							<Text bold>RESERVATION</Text>
